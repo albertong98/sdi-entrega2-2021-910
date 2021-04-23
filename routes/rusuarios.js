@@ -1,24 +1,30 @@
 module.exports = (app,swig,gestorBD) => {
     app.get('/registrarse',(req,res) => getSignup(res,swig));
 
-    app.get('/identificarse', (req,res) => getLogin(res,swig));
+    app.get('/identificarse', (req,res) => getLogin(req,res,swig));
 
     app.get('/desconectarse', (req,res) => logout(req,res));
 
     app.post('/usuario', (req,res) => postUsuario(app,req,res,gestorBD));
 
-    app.post("/identificarse", (req,res) => identificarUsuario(app,req,res,gestorBD));
+    app.post('/identificarse', (req,res) => identificarUsuario(app,req,res,gestorBD));
 
-
+    app.get('/usuarios', (req,res) => obtenerUsuarios(app,req,res,swig,gestorBD))
 }
 
 let getSignup = (res,swig) => {
-    let respuesta = swig.renderFile('views/bregistro.html', {});
+    let respuesta = swig.renderFile('views/bregistro.html',  {
+        mensajes: req.session.mensajes
+    });
+    req.session.mensajes = [];
     res.send(respuesta);
 }
 
-let getLogin = (res,swig) => {
-    let respuesta = swig.renderFile('views/bidentificacion.html', {});
+let getLogin = (req,res,swig) => {
+    let respuesta = swig.renderFile('views/bidentificacion.html', {
+        mensajes: req.session.mensajes
+    });
+    req.session.mensajes = [];
     res.send(respuesta);
 }
 
@@ -32,13 +38,22 @@ let postUsuario = (app,req,res,gestorBD) => {
         .update(req.body.password).digest('hex');
     let usuario = {
         email : req.body.email,
-        password : seguro
+        password : seguro,
+        saldo: 100.0
     }
     gestorBD.insertarUsuario(usuario, function(id) {
         if (id == null){
-            res.redirect('/registrarse?mensaje=Error al registrar el usuario&tipoMensaje=alert-danger');
+            req.session.mensajes.push({
+                mensaje: 'Error al registrar el usuario',
+                tipoMensaje: 'alert-danger'
+            });
+            res.redirect('/registrarse');
         } else {
-            res.redirect('/identificarse?mensaje=Nuevo usuario registrado');
+            req.session.mensajes.push({
+                mensaje: 'Nuevo usuario registrado',
+                tipoMensaje: 'alert-info'
+            });
+            res.redirect('/identificarse');
         }
     });
 }
@@ -53,12 +68,36 @@ let identificarUsuario = (app,req,res,gestorBD) => {
     gestorBD.obtenerUsuarios(criterio, function(usuarios) {
         if (usuarios == null || usuarios.length == 0) {
             req.session.usuario = null;
-            res.redirect("/identificarse" +
-                "?mensaje=Email o password incorrecto"+
-                "&tipoMensaje=alert-danger ");
+            req.session.mensajes.push({
+                mensaje: 'Email o password incorrecto',
+                tipoMensaje: 'alert-danger'
+            });
+            res.redirect("/identificarse");
         } else {
             req.session.usuario = usuarios[0].email;
-            res.redirect("/publicaciones");
+            res.redirect("/");
         }
     });
+}
+
+let obtenerUsuarios = (app,req,res,swig,gestorBD) =>{
+    let criterio = {};
+    if(req.session.usuario != 'admin@email.com') {
+        req.session.mensajes.push({
+            mensaje: 'Solo el usuario administrador puede ver los usuarios',
+            tipoMensaje: 'alert-danger'
+        });
+        res.redirect("/identificarse");
+    }else{
+        gestorBD.obtenerUsuarios(criterio, function(usuarios) {
+            if (usuarios == null || usuarios.length == 0) {
+                req.session.usuario = null;
+                res.send(swig.renderFile('views/error.html',{error:'error al listar'}));
+            } else {
+                res.send(swig.renderFile('views/busuarios.html',{
+                    usuarios: usuarios
+                }));
+            }
+        });
+    }
 }
