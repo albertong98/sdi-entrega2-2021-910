@@ -37,10 +37,6 @@ routerUsuarioSession.use(function(req, res, next) {
     }
 });
 
-let routerErroresSession = express.Router();
-routerErroresSession.use((req,res,next) =>{
-
-});
 
 app.set('db',dburi);
 app.set('clave','abcdefg');
@@ -52,6 +48,12 @@ app.use(express.static('public'));
 app.use((req,res,next) => {
     if(req.session.mensajes == null)
         req.session.mensajes = [];
+    next();
+});
+
+app.use((req,res,next) => {
+    if(req.session.usuario)
+        app.locals.usuario = req.session.usuario;
     next();
 });
 

@@ -5,7 +5,7 @@ module.exports = (app,swig,gestorBD) => {
 
     app.get('/desconectarse', (req,res) => logout(req,res));
 
-    app.post('/usuario', (req,res) => postUsuario(app,req,res,gestorBD));
+    app.post('/usuario', (req,res) => postUsuario(app,req,res,gestorBD,swig));
 
     app.post('/identificarse', (req,res) => identificarUsuario(app,req,res,gestorBD));
 
@@ -33,27 +33,47 @@ let logout = (req,res) => {
     res.send("Usuario desconectado");
 }
 
-let postUsuario = (app,req,res,gestorBD) => {
+let postUsuario = (app,req,res,gestorBD,swig) => {
     let seguro = app.get("crypto").createHmac('sha256', app.get('clave'))
         .update(req.body.password).digest('hex');
-    let usuario = {
-        email : req.body.email,
-        password : seguro,
-        saldo: 100.0
-    }
-    gestorBD.insertarUsuario(usuario, function(id) {
-        if (id == null){
+    let usuario = { email : req.body.email, password : seguro, rol: '', saldo: 100.0}
+
+    let mensajes = validarUsuario(usuario);
+    if(mensajes.length > 0){
+        mensajes.forEach(m => {
             req.session.mensajes.push({
-                mensaje: 'Error al registrar el usuario',
+                mensaje: m,
+                tipoMensaje: 'alert-danger'
+            });
+        });
+        res.redirect('registrarse');
+    }
+
+    gestorBD.obtenerUsuarios({ 'email' : usuario.email},(usuarios) => {
+        if(usuarios == null)
+            res.send(swig.renderFile('views/error.html',{error:'error al obtener usuarios'}));
+        if(usuarios.length == 0) {
+            gestorBD.insertarUsuario(usuario, function (id) {
+                if (id == null) {
+                    req.session.mensajes.push({
+                        mensaje: 'Error al registrar el usuario',
+                        tipoMensaje: 'alert-danger'
+                    });
+                    res.redirect('/registrarse');
+                } else {
+                    req.session.mensajes.push({
+                        mensaje: 'Nuevo usuario registrado',
+                        tipoMensaje: 'alert-info'
+                    });
+                    res.redirect('/identificarse');
+                }
+            });
+        }else{
+            req.session.mensajes.push({
+                mensaje: 'El email ya está en uso',
                 tipoMensaje: 'alert-danger'
             });
             res.redirect('/registrarse');
-        } else {
-            req.session.mensajes.push({
-                mensaje: 'Nuevo usuario registrado',
-                tipoMensaje: 'alert-info'
-            });
-            res.redirect('/identificarse');
         }
     });
 }
@@ -74,7 +94,7 @@ let identificarUsuario = (app,req,res,gestorBD) => {
             });
             res.redirect("/identificarse");
         } else {
-            req.session.usuario = usuarios[0].email;
+            req.session.usuario = usuarios[0];
             res.redirect("/");
         }
     });
@@ -82,7 +102,7 @@ let identificarUsuario = (app,req,res,gestorBD) => {
 
 let obtenerUsuarios = (app,req,res,swig,gestorBD) =>{
     let criterio = {};
-    if(req.session.usuario != 'admin@email.com') {
+    if(req.session.usuario.email != 'admin@email.com') {
         req.session.mensajes.push({
             mensaje: 'Solo el usuario administrador puede ver los usuarios',
             tipoMensaje: 'alert-danger'
@@ -100,4 +120,13 @@ let obtenerUsuarios = (app,req,res,swig,gestorBD) =>{
             }
         });
     }
+}
+
+let validarUsuario = (usuario) => {
+    let mensajes = [];
+    if(usuario.email == null ||usuario.email.length < 2)
+        mensajes.push('Nombre vacío o no válido.');
+    if(!usuario.email.contains('@'))
+        mensajes.push('Formato de email no válido.')
+    return mensajes;
 }
