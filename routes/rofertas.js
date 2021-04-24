@@ -2,10 +2,12 @@ module.exports = (app,swig,gestorBD) => {
     app.get('/offer/add', (req,res) => getOffer(req,res,swig));
 
     app.post('/offer/add',(req,res) => postOffer(req,res,gestorBD));
+
+    app.get('/offer/list',(req,res) => getPublicaciones(req,res,swig,gestorBD));
 }
 
 let getOffer = (req,res,swig) => {
-    let respuesta = swig.renderFile('views/bagregar.html', res.locals);
+    let respuesta = swig.renderFile('views/offer/bagregar.html', res.locals);
     req.session.mensajes = [];
     res.send(respuesta);
 }
@@ -27,7 +29,20 @@ let postOffer = (req,res,gestorBD) => {
                 mensaje: 'Oferta agregada',
                 tipoMensaje: 'alert-info'
             });
-            res.redirect('/offer/add');
+            res.redirect('/offer/list');
+        }
+    });
+}
+
+let getPublicaciones = (req,res,swig,gestorBD) => {
+    let criterio = {'seller' : req.session.usuario.email }
+
+    gestorBD.obtenerOfertas(criterio, ofertas => {
+        if(ofertas == null)
+            swig.renderFile('views/error.html',{error: 'Error al listar sus publicaciones'});
+        else{
+            res.locals.ofertas = ofertas;
+            res.send(swig.renderFile('views/offer/bpublicaciones.html',res.locals));
         }
     });
 }
