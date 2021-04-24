@@ -55,10 +55,9 @@ app.use((req,res,next) => {
     if(req.session.mensajes == null)
         req.session.mensajes = [];
     res.locals.mensajes = req.session.mensajes
-    if(req.session.usuario) {
-        res.locals.usuarioEmail = req.session.usuario.email;
-        res.locals.usuarioSaldo = req.session.usuario.saldo;
-    }
+    if(req.session.usuario)
+        res.locals.usuario = usuario;
+
     next();
 });
 
