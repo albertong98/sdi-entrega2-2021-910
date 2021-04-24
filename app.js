@@ -38,6 +38,17 @@ routerUsuarioSession.use(function(req, res, next) {
     }
 });
 
+let routerAdministrador = express.Router();
+routerAdministrador.use((req,res,next) => {
+   if(req.session.usuario.rol == 'administrador')
+       next();
+   else{
+       res.status(403);
+       res.send(swig.renderFile('/views/error.html',{error : 'Solo el usuario administrador puede ver los usuarios'}));
+   }
+});
+app.use('/usuario/list',routerAdministrador);
+app.use('/usuario/delete',routerAdministrador);
 
 app.use(function(req,res,next){
     if(req.session.mensajes == null)

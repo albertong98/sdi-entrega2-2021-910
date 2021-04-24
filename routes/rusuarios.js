@@ -9,7 +9,7 @@ module.exports = (app,swig,gestorBD) => {
 
     app.post('/identificarse', (req,res) => identificarUsuario(app,req,res,gestorBD));
 
-    app.get('/usuario/list', (req,res) => obtenerUsuarios(app,req,res,swig,gestorBD));
+    app.get('/usuario/list', (req,res) => obtenerUsuarios(req,res,swig,gestorBD));
 
     app.post('/usuario/delete',(req,res) => deleteUsuarios(req,res,gestorBD,swig));
 }
@@ -88,21 +88,16 @@ let identificarUsuario = (app,req,res,gestorBD) => {
     });
 }
 
-let obtenerUsuarios = (app,req,res,swig,gestorBD) =>{
-    let criterio = {};
-    if(req.session.usuario.rol != 'administrador') {
-        reject( 'Solo el usuario administrador puede ver los usuarios','/identificarse',req,res);
-    }else{
-        gestorBD.obtenerUsuarios(criterio, usuarios => {
-            if (usuarios == null || usuarios.length == 0) {
-                req.session.usuario = null;
-                res.send(swig.renderFile('views/error.html',{error:'error al listar'}));
-            } else {
-                res.locals.usuarios = usuarios;
-                res.send(swig.renderFile('views/busuarios.html',res.locals));
-            }
-        });
-    }
+let obtenerUsuarios = (req,res,swig,gestorBD) =>{
+    gestorBD.obtenerUsuarios({}, usuarios => {
+        if (usuarios == null || usuarios.length == 0) {
+            req.session.usuario = null;
+            res.send(swig.renderFile('views/error.html',{error:'error al listar'}));
+        } else {
+            res.locals.usuarios = usuarios;
+            res.send(swig.renderFile('views/busuarios.html',res.locals));
+        }
+    });
 }
 
 let deleteUsuarios = (req,res,gestorBD,swig) => {
