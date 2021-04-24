@@ -24,7 +24,7 @@ let postOffer = (req,res,gestorBD) => {
             res.send(swig.renderFile('views/error.html',{error: 'Error al subir la oferta'}));
         else{
             req.session.mensajes.push({
-                mensaje: 'Nuevo usuario registrado',
+                mensaje: 'Oferta agregada',
                 tipoMensaje: 'alert-info'
             });
             res.redirect('/offer/add');

@@ -37,6 +37,7 @@ routerUsuarioSession.use(function(req, res, next) {
         res.redirect("/identificarse");
     }
 });
+app.use('/offer/add',routerUsuarioSession);
 
 let routerAdministrador = express.Router();
 routerAdministrador.use((req,res,next) => {
@@ -44,13 +45,13 @@ routerAdministrador.use((req,res,next) => {
        next();
    else{
        res.status(403);
-       res.send(swig.renderFile('/views/error.html',{error : 'Solo el usuario administrador puede ver los usuarios'}));
+       res.send(swig.renderFile('/views/error.html',{error : 'Solo el usuario administrador puede gestionar los usuarios'}));
    }
 });
 app.use('/usuario/list',routerAdministrador);
 app.use('/usuario/delete',routerAdministrador);
 
-app.use(function(req,res,next){
+app.use((req,res,next) => {
     if(req.session.mensajes == null)
         req.session.mensajes = [];
     res.locals.mensajes = req.session.mensajes
