@@ -27,9 +27,11 @@
       <ul class="nav navbar-nav">
 
       </ul>
-      <ul>
-        <span>{{ usuario.email }}: {{usuario.saldo}}€</span>
-      </ul>
+      <span>
+        {% if usuarioEmail %}
+        {{ usuarioEmail }}: {{ usuarioSaldo }} €
+        {% endif %}
+      </span>
       <ul class="nav navbar-nav navbar-right">
 	    <li><a href="/registrarse"><span class="glyphicon glyphicon-user"></span> Registrate</a></li>
         <li><a href="/identificarse"><span class="glyphicon glyphicon-log-in"></span> Identifícate</a></li>

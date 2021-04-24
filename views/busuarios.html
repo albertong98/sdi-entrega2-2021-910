@@ -1,0 +1,33 @@
+{% extends "base.html" %} {% block titulo %} Mis publicaciones {% endblock %} 
+
+{% block contenido_principal %}
+<h2>Usuarios de la aplicación</h2>
+
+<div class="table-responsive">
+	<form action="/usuario/delete" method="POST">
+		<table class="table table-hover">
+			<thead>
+				<tr>
+					<th>Email</th>
+					<th>Nombre</th>
+					<th>Apellidos</th>
+					<th>Eliminar</th>
+				</tr>
+			</thead>
+			<tbody>
+			{% for usuario in usuarios %}
+				<tr>
+					<td>{{ usuario.email }}</td>
+					<td>{{ usuario.name }}</td>
+					<td>{{ usuario.lastname }}</td>
+					<td><input name="idUser" type="checkbox" value="{{usuario._id}}"></td>
+				</tr>
+			{% endfor %}
+			</tbody>
+		</table>
+	<button type="submit" name='delete' value="delete" class='btn btn-secondary btn-sm'>Eliminar</button>
+	</form>
+</div>
+
+
+{% endblock %}

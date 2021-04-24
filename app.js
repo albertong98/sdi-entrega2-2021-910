@@ -23,6 +23,7 @@ let mongo = require('mongodb');
 let dburi = 'mongodb://admin:sdi@mywallapop-shard-00-00.vadns.mongodb.net:27017,mywallapop-shard-00-01.vadns.mongodb.net:27017,mywallapop-shard-00-02.vadns.mongodb.net:27017/myFirstDatabase?ssl=true&replicaSet=atlas-gundmn-shard-0&authSource=admin&retryWrites=true&w=majority';
 
 let gestorBD = require("./modules/gestorBD.js");
+
 gestorBD.init(app,mongo);
 
 let routerUsuarioSession = express.Router();
@@ -38,24 +39,23 @@ routerUsuarioSession.use(function(req, res, next) {
 });
 
 
+app.use(function(req,res,next){
+    if(req.session.mensajes == null)
+        req.session.mensajes = [];
+    res.locals.mensajes = req.session.mensajes
+    if(req.session.usuario) {
+        res.locals.usuarioEmail = req.session.usuario.email;
+        res.locals.usuarioSaldo = req.session.usuario.saldo;
+    }
+    next();
+});
+
 app.set('db',dburi);
 app.set('clave','abcdefg');
 app.set('crypto',crypto);
 app.set('port',8081);
 
 app.use(express.static('public'));
-
-app.use((req,res,next) => {
-    if(req.session.mensajes == null)
-        req.session.mensajes = [];
-    next();
-});
-
-app.use((req,res,next) => {
-    if(req.session.usuario)
-        app.locals.usuario = req.session.usuario;
-    next();
-});
 
 require("./routes/rusuarios.js")(app,swig,gestorBD);
 
