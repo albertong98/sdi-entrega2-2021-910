@@ -15,6 +15,7 @@ let getOffer = (req,res,swig) => {
 }
 
 let postOffer = (req,res,gestorBD) => {
+    let offerAddValidator = require("./validators/offerAddValidator.js");
     let oferta = {
         title: req.body.title,
         details: req.body.details,
@@ -22,18 +23,22 @@ let postOffer = (req,res,gestorBD) => {
         date: new Date().now(),
         seller: req.session.usuario.email
     }
+    let mensajes = offerAddValidator.validar(oferta);
 
-    gestorBD.insertarOferta(oferta,id => {
-        if(id == null)
-            res.send(swig.renderFile('views/error.html',{error: 'Error al subir la oferta'}));
-        else{
-            req.session.mensajes.push({
-                mensaje: 'Oferta agregada',
-                tipoMensaje: 'alert-info'
-            });
-            res.redirect('/offer/list');
-        }
-    });
+    if(mensajes.length > 0) reject(mensajes,'/offer/add',req,res);
+    else{
+        gestorBD.insertarOferta(oferta,id => {
+            if(id == null)
+                res.send(swig.renderFile('views/error.html',{error: 'Error al subir la oferta'}));
+            else{
+                req.session.mensajes.push({
+                    mensaje: 'Oferta agregada',
+                    tipoMensaje: 'alert-info'
+                });
+                res.redirect('/offer/list');
+            }
+        });
+    }
 }
 
 let getPublicaciones = (req,res,swig,gestorBD) => {
