@@ -5,7 +5,7 @@ module.exports = (app,gestorBD) => {
 }
 
 let obtenerOfertas = (res,gestorBD) => {
-    gestorBD.obtenerOfertas( {} , ofertas => {
+    gestorBD.obtenerOfertas( {'seller': {$not: res.usuario }} , ofertas => {
         if (ofertas == null) {
             res.status(500);
             res.json({
