@@ -46,15 +46,15 @@ routerUsuarioAutor.use(function(req, res, next) {
     console.log("routerUsuarioAutor");
     let path = require('path');
     let id = path.basename(req.originalUrl);
-
+    let deleting = path.includes('delete');
     gestorBD.obtenerOfertas(
         {_id: mongo.ObjectID(id) }, ofertas => {
             console.log(canciones[0]);
-            if(ofertas[0].seller == req.session.usuario ){
+            if(deleting && ofertas[0].seller == req.session.usuario || oferta[0].seller != req.session.usuario){
                 next();
             } else {
                 req.session.mensajes.push({
-                    mensaje: 'Solo puede borrar ofertas propias',
+                    mensaje: deleting ? 'Solo puede borrar ofertas propias' : 'No puede comprar sus ofertas',
                     tipoMensaje: 'alert-danger'
                 });
                 res.redirect("/offer/list");
@@ -62,6 +62,7 @@ routerUsuarioAutor.use(function(req, res, next) {
         })
 });
 app.use('/offer/delete',routerUsuarioAutor);
+app.use('/offer/buy',routerUsuarioAutor);
 
 let routerAdministrador = express.Router();
 routerAdministrador.use((req,res,next) => {

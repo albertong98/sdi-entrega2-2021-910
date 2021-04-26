@@ -100,5 +100,40 @@ module.exports = {
                 });
             }
         });
+    },obtenerOfertasPg : function(criterio,pg,funcionCallback) {
+        this.mongo.MongoClient.connect(this.app.get('db'), function (err, db) {
+            if (err) {
+                funcionCallback(null);
+            } else {
+                let collection = db.collection('ofertas');
+                collection.count(function (err, count) {
+                    collection.find(criterio).skip((pg - 1) * 4).limit(4)
+                        .toArray(function (err, ofertas) {
+                            if (err) {
+                                funcionCallback(null);
+                            } else {
+                                funcionCallback(ofertas, count);
+                            }
+                            db.close();
+                        });
+                });
+            }
+        });
+    },insertarCompra: function(compra, funcionCallback) {
+        this.mongo.MongoClient.connect(this.app.get('db'), function(err, db) {
+            if (err) {
+                funcionCallback(null);
+            } else {
+                let collection = db.collection('compras');
+                collection.insertOne(compra, function(err, result) {
+                    if (err) {
+                        funcionCallback(null);
+                    } else {
+                        funcionCallback(result.ops[0]._id);
+                    }
+                    db.close();
+                });
+            }
+        });
     }
 }

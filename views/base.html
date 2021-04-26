@@ -39,11 +39,19 @@
         </li>
         {% endif %}
       </ul>
-      <span>
-        {% if usuario %}
-        {{ usuario.email }}: {{ usuario.saldo }} €
-        {% endif %}
-      </span>
+      {% if usuario %}
+      <ul>
+        <form class="navbar-form  navbar-left" action="/offer/search">
+		<div class="form-group">
+			<input name="busqueda" type="text" class="form-control" size="50"
+                   placeholder="Buscar por titulo">
+		</div>
+		<button type="submit" class="btn btn-default">Buscar</button>
+        </form>
+        <span class="user-info"> Saldo: {{ usuario.saldo }} €</span>
+        <span class="user-info">{{ usuario.email }}</span>
+      </ul>
+      {% endif %}
       <ul class="nav navbar-nav navbar-right">
         {% if usuario %}
         <li><a href="/desconectarse"><span class="glyphicon glyphicon-log-in"></span> Desconectate</a></li>
