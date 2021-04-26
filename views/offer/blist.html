@@ -19,13 +19,14 @@
             <td>{{ oferta.title }}</td>
             <td>{{ oferta.details }}</td>
             <td>{{ oferta.precio }}</td>
-            <td>
-                {% block enlace %}{% endblock %}
-            </td>
+            {% block enlace %}{% endblock %}
         </tr>
         {% endfor %}
         </tbody>
     </table>
 </div>
+
+{% block paginacion %}
+{% endblock %}
 
 {% endblock %}

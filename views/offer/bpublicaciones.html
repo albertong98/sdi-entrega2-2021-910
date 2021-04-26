@@ -1,5 +1,7 @@
 {% extends "blist.html" %} {% block titulo %} Mis publicaciones {% endblock %}
 {% block h2 %} Mis publicaciones {% endblock %}
 {% block enlace %}
-<a href="/offer/delete/{{ oferta._id.toString() }}">eliminar</a>
+<td>
+    <a href="/offer/delete/{{ oferta._id.toString() }}">eliminar</a>
+</td>
 {% endblock %}

@@ -40,6 +40,8 @@ routerUsuarioSession.use(function(req, res, next) {
 app.use('/offer/add',routerUsuarioSession);
 app.use('/offer/list',routerUsuarioSession);
 app.use('/offer/delete',routerUsuarioSession);
+app.use('/offer/buy',routerUsuarioSession);
+app.use('/compras',routerUsuarioSession);
 
 let routerUsuarioAutor = express.Router();
 routerUsuarioAutor.use(function(req, res, next) {
@@ -50,7 +52,7 @@ routerUsuarioAutor.use(function(req, res, next) {
     gestorBD.obtenerOfertas(
         {_id: mongo.ObjectID(id) }, ofertas => {
             console.log(canciones[0]);
-            if(deleting && ofertas[0].seller == req.session.usuario || oferta[0].seller != req.session.usuario){
+            if(deleting && ofertas[0].seller == req.session.usuario.email || oferta[0].seller != req.session.usuario.email){
                 next();
             } else {
                 req.session.mensajes.push({
@@ -63,6 +65,25 @@ routerUsuarioAutor.use(function(req, res, next) {
 });
 app.use('/offer/delete',routerUsuarioAutor);
 app.use('/offer/buy',routerUsuarioAutor);
+
+let routerSold = express.Router();
+routerSold.use((req,res,next) => {
+    let path = require('path');
+    let id = path.basename(req.originalUrl);
+    gestorBD.obtenerCompras({'ofertaId' : id },compras => {
+        if(compras != null && compras.length > 0)
+            next();
+        else{
+            req.session.mensajes.push({
+                mensaje: compras[0].comprador==req.session.usuario.email ? 'Ya ha comprado esa oferta'
+                                                                         : 'Esa oferta ya ha sido comprada por otro usuario',
+                tipoMensaje: 'alert-danger'
+            });
+            res.redirect("/compras");
+        }
+    })
+});
+app.use('/offer/buy',routerSold);
 
 let routerAdministrador = express.Router();
 routerAdministrador.use((req,res,next) => {

@@ -10,6 +10,8 @@ module.exports = (app,swig,gestorBD) => {
     app.get('/offer/search',(req,res) => getBusqueda(req,res,gestorBD,swig));
 
     app.get('/offer/buy/:id',(req,res) => buyOffer(req,res,swig,gestorBD));
+
+    app.get('/compras',(req,res) => getCompras(req,res,swig,gestorBD));
 }
 
 let getOffer = (req,res,swig) => {
@@ -104,18 +106,32 @@ let getBusqueda = (req,res,gestorBD,swig) =>{
 }
 
 let buyOffer = (req,res,swig,gestorBD) =>{
-    let comprador = req.session.usuario;
-    let oferta = {};
-    let criterio = {'_id' : gestorBD.mongo.ObjectID(req.params.id)};
-    gestorBD.obtenerOfertas(criterio, ofertas => {
-        if(ofertas == null)
-            res.send(swig.renderFile('views/error.html',{error: 'Error al obtener la oferta'}));
-        else
-            oferta = ofertas[0]
-    });
-    gestorBD.comprarOferta(oferta,comprador,() =>{
+    let ofertaId = gestorBD.mongo.ObjectID(req.params.id);
+    let compra = {
+        comprador: req.session.usuario.email,
+        ofertaId : ofertaId
+    }
 
+    gestorBD.insertarCompra(compra, function (idCompra) {
+        if (idCompra == null) {
+            res.send(swig.renderFile('views/error.html',{error:'Error al comprar canción'}));
+        } else {
+            res.redirect("/compras");
+        }
     });
+}
+
+let getCompras = (req,res,swig,gestorBD) => {
+    let criterio = {'comprador' : req.session.usuario.email};
+
+    gestorBD.obtenerCompras(criterio, compras => {
+        if(compras == null)
+            res.send(swig.renderFile('views/error.html',{error : 'Error al obtener las compras del usuario'}));
+        else{
+            res.locals.ofertas = compras;
+            res.send(swig.renderFile('views/bcompras.html',res.locals));
+        }
+    })
 }
 
 let reject = (mensajes,destino,req,res) => {
