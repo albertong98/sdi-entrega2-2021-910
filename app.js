@@ -1,6 +1,21 @@
 let express = require('express');
 let app = express();
 
+app.use(function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Credentials", "true");
+    res.header("Access-Control-Allow-Methods", "POST, GET, DELETE, UPDATE, PUT");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, token");
+    // Debemos especificar todas las headers que se aceptan. Content-Type , token
+    next();
+});
+
+let rest = require('request');
+app.set('rest',rest);
+
+let jwt = require('jsonwebtoken');
+app.set('jwt',jwt);
+
 let fs = require('fs');
 let https = require('https');
 
@@ -25,6 +40,36 @@ let dburi = 'mongodb://admin:sdi@mywallapop-shard-00-00.vadns.mongodb.net:27017,
 let gestorBD = require("./modules/gestorBD.js");
 
 gestorBD.init(app,mongo);
+let routerUsuarioToken = express.Router();
+routerUsuarioToken.use(function(req, res, next) {
+    let token = req.headers['token'] || req.body.token || req.query.token;
+    if (token != null) {
+        jwt.verify(token, 'secreto', function(err, infoToken) {
+            if (err || (Date.now()/1000 - infoToken.tiempo) > 240 ){
+                res.status(403); // Forbidden
+                res.json({
+                    acceso : false,
+                    error: 'Token invalido o caducado'
+                });
+                return;
+
+            } else {
+                // dejamos correr la petición
+                res.usuario = infoToken.usuario;
+                next();
+            }
+        });
+
+    } else {
+        res.status(403);
+        res.json({
+            acceso : false,
+            mensaje: 'No hay Token'
+        });
+    }
+});
+
+app.use('/api/offer', routerUsuarioToken);
 
 let routerUsuarioSession = express.Router();
 routerUsuarioSession.use(function(req, res, next) {
@@ -116,6 +161,7 @@ app.use(express.static('public'));
 
 require("./routes/rusuarios.js")(app,swig,gestorBD);
 require("./routes/rofertas.js")(app,swig,gestorBD);
+require("./routes/rapiofertas.js")(app,gestorBD);
 
 https.createServer({
     key: fs.readFileSync('certificates/alice.key'),
