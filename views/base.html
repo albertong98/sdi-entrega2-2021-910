@@ -21,11 +21,11 @@
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>                        
       </button>
-      <img src="/img/logo.png" alt="logo"/>
     </div>
     <div class="collapse navbar-collapse" id="myNavbar">
       <ul class="nav navbar-nav">
-        {% if usuario && usuario.rol == 'administrador' %}
+        {% if usuario %}
+        {% if usuario.rol == 'administrador' %}
         <li><a href="/user/list">Lista de usuarios</a></li>
         {% endif %}
         <li id="offers-menu" class="dropdown">
@@ -37,6 +37,7 @@
             <li><a href="/offer/add">Subir una oferta</a></li>
           </ul>
         </li>
+        {% endif %}
       </ul>
       <span>
         {% if usuario %}

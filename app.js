@@ -38,6 +38,30 @@ routerUsuarioSession.use(function(req, res, next) {
     }
 });
 app.use('/offer/add',routerUsuarioSession);
+app.use('/offer/list',routerUsuarioSession);
+app.use('/offer/delete',routerUsuarioSession);
+
+let routerUsuarioAutor = express.Router();
+routerUsuarioAutor.use(function(req, res, next) {
+    console.log("routerUsuarioAutor");
+    let path = require('path');
+    let id = path.basename(req.originalUrl);
+
+    gestorBD.obtenerOfertas(
+        {_id: mongo.ObjectID(id) }, ofertas => {
+            console.log(canciones[0]);
+            if(ofertas[0].seller == req.session.usuario ){
+                next();
+            } else {
+                req.session.mensajes.push({
+                    mensaje: 'Solo puede borrar ofertas propias',
+                    tipoMensaje: 'alert-danger'
+                });
+                res.redirect("/offer/list");
+            }
+        })
+});
+app.use('/offer/delete',routerUsuarioAutor);
 
 let routerAdministrador = express.Router();
 routerAdministrador.use((req,res,next) => {
@@ -56,7 +80,7 @@ app.use((req,res,next) => {
         req.session.mensajes = [];
     res.locals.mensajes = req.session.mensajes
     if(req.session.usuario)
-        res.locals.usuario = usuario;
+        res.locals.usuario = req.session.usuario;
 
     next();
 });
@@ -69,6 +93,7 @@ app.set('port',8081);
 app.use(express.static('public'));
 
 require("./routes/rusuarios.js")(app,swig,gestorBD);
+require("./routes/rofertas.js")(app,swig,gestorBD);
 
 https.createServer({
     key: fs.readFileSync('certificates/alice.key'),

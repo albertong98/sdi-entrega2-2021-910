@@ -55,29 +55,19 @@ let getPublicaciones = (req,res,swig,gestorBD) => {
 }
 
 let deleteOffer = (req,res,swig,gestorBD) => {
-    let criterio = {'_id' : gestorBD.mongo.ObjectID(req.params.id) }
+   let criterio = {'_id' : gestorBD.mongo.ObjectID(req.params.id) }
 
-    gestorBD.obtenerOfertas(criterio, ofertas => {
-       if(ofertas == null)
-           swig.renderFile('views/error.html',{error: 'Error al buscar la oferta '+req.params.id});
-       else{
-           if(req.session.usuario.email != ofertas[0].seller)
-               reject(['Solo puede borrar ofertas propias.'],'/identificarse',req,res);
-           else{
-               gestorBD.eliminarOferta(criterio, result => {
-                   if(result == null)
-                       swig.renderFile('views/error.html',{error: 'Error al eliminar la oferta '+req.params.id});
-                   else {
-                       req.session.mensajes.push({
-                           mensaje: 'Oferta eliminada',
-                           tipoMensaje: 'alert-info'
-                       });
-                       res.redirect('/offer/list');
-                   }
-               });
-           }
+   gestorBD.eliminarOferta(criterio, result => {
+       if(result == null)
+           swig.renderFile('views/error.html',{error: 'Error al eliminar la oferta '+req.params.id});
+       else {
+           req.session.mensajes.push({
+               mensaje: 'Oferta eliminada',
+               tipoMensaje: 'alert-info'
+           });
+           res.redirect('/offer/list');
        }
-    });
+   });
 }
 
 let reject = (mensajes,destino,req,res) => {

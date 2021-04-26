@@ -1,0 +1,7 @@
+{% extends "blist.html" %} {% block titulo %} Mi busqueda {% endblock %}
+{% block h2 %} Mis publicaciones {% endblock %}
+{% block enlace %}
+<td>
+    <a href="/offer/buy/{{ oferta._id.toString() }}">comprar</a>
+</td>
+{% endblock %}

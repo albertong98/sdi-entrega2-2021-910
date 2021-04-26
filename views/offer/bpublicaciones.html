@@ -1,38 +1,5 @@
-{% extends "base.html" %} {% block titulo %} Mis publicaciones {% endblock %}
-
-{% block contenido_principal %}
-<h2>Mis publicaciones</h2>
-
-<div class="row text-right">
-    <a href="/offer/add" class="btn btn-info" role="button">Agregar oferta</a>
-</div>
-
-<div class="table-responsive">
-    <table class="table table-hover">
-        <thead>
-        <tr>
-            <th>Título</th>
-            <th>Descripcion</th>
-            <th>Precio</th>
-            <th class="col-md-1"></th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for oferta in ofertas %}
-        <tr>
-            <td>{{ oferta.title }}</td>
-            <td>{{ coferta.details }}</td>
-            <td>
-                <a href="/offer/delete/{{ oferta._id.toString() }}">eliminar</a>
-            </td>
-        </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-</div>
-
-<div class="row text-right">
-    <a href="/offer/add" class="btn btn-info" role="button">Agregar oferta</a>
-</div>
-
+{% extends "blist.html" %} {% block titulo %} Mis publicaciones {% endblock %}
+{% block h2 %} Mis publicaciones {% endblock %}
+{% block enlace %}
+<a href="/offer/delete/{{ oferta._id.toString() }}">eliminar</a>
 {% endblock %}
