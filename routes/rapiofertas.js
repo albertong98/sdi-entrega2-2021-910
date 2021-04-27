@@ -5,7 +5,9 @@ module.exports = (app,gestorBD) => {
 
     app.post('/api/offer/mensaje/:id',(req,res) => sendMensaje(req,res,gestorBD));
 
-    app.get('/api/mensajes/:id/:email',(req,res) => getConversacion(req,res,gestorBD));
+    app.get('/api/conversacion/:id/:email',(req,res) => getConversacion(req,res,gestorBD));
+
+    app.get('/api/conversaciones', getConversaciones(req,res,gestorBD));
 }
 
 let obtenerOfertas = (res,gestorBD) => {
@@ -70,7 +72,7 @@ let sendMensaje = (req,res,gestorBD) => {
 }
 
 let getConversacion = (req,res,gestorBD) => {
-    let criterio = {'_id': gestorBD.mongo.ObjectID(req.params.id), 'comprador': $in[res.usuario, req.params.email]};
+    let criterio = {'offerId': gestorBD.mongo.ObjectID(req.params.id), 'comprador': {$in: [res.usuario, req.params.email]}};
 
     gestorBD.obtenerMensajes(criterio, mensajes => {
         if(mensajes == null){
@@ -81,6 +83,31 @@ let getConversacion = (req,res,gestorBD) => {
         }else{
             res.status(201);
             res.send( JSON.stringify(mensajes) );
+        }
+    });
+}
+
+let getConversaciones = (req,res,gestorBD) => {
+    let criterio = { 'seller' : res.usuario }
+    gestorBD.obtenerOfertas(criterio, ofertas => {
+        if(ofertas == null) {
+            res.status(500);
+            res.json({
+                error: "se ha producido un error"
+            });
+        }else{
+            criterio = {$or: [{'offerId': {$in: ofertas.map(o => o._id)}}, {'comprador' : res.usuario}]};
+            gestorBD.obtenerMensajes(criterio,conversaciones => {
+                if(conversaciones == null) {
+                    res.status(500);
+                    res.json({
+                        error: "se ha producido un error"
+                    });
+                }else{
+                    res.status(201);
+                    res.send( JSON.stringify(conversaciones) );
+                }
+            })
         }
     });
 }

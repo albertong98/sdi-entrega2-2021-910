@@ -173,11 +173,28 @@ module.exports = {
                 funcionCallback(null);
             }else {
                 let collection = db.collection('mensajes');
-                collection.find(criterio).toArray(function(err, compras) {
+                collection.find(criterio).toArray(function(err, mensajes) {
                     if (err) {
                         funcionCallback(null);
                     } else {
-                        funcionCallback(compras);
+                        funcionCallback(mensajes);
+                    }
+                    db.close();
+                });
+            }
+        });
+    },obtenerConversaciones : function(criterio,funcionCallback){
+        this.mongo.MongoClient.connect(this.app.get('db'), function(err, db) {
+            if (err) {
+                funcionCallback(null);
+            }else {
+                let collection = db.collection('mensajes');
+                collection.aggregate([{"$group": { "_id": { offerId: "$offerId", comprador: "$comprador" }}}])
+                .find(criterio).toArray(function(err, conversaciones) {
+                    if (err) {
+                        funcionCallback(null);
+                    } else {
+                        funcionCallback(conversaciones);
                     }
                     db.close();
                 });
