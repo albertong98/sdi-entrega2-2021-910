@@ -2,6 +2,8 @@ module.exports = (app,gestorBD) => {
     app.get('/api/offer',(req,res) => obtenerOfertas(res,gestorBD));
 
     app.post('/api/autenticar/',(req,res) => autenticarUsuario(req,res,gestorBD,app));
+
+    app.post('/api/offer/mensaje/:id',(req,res) => sendMensaje(req,res,gestorBD));
 }
 
 let obtenerOfertas = (res,gestorBD) => {
@@ -23,7 +25,7 @@ let autenticarUsuario = (req,res,gestorBD,app) => {
 
     let criterio = { email: req.body.email, password: seguro };
 
-    gestorBD.obtenerUsuarios(criterio, (usuarios) => {
+    gestorBD.obtenerUsuarios(criterio, usuarios => {
         if(usuarios == null || usuarios.length == 0){
             res.status(401);
             res.json({ autenticado: false });
@@ -35,6 +37,27 @@ let autenticarUsuario = (req,res,gestorBD,app) => {
             res.json({
                 autenticado: true,
                 token : token
+            });
+        }
+    });
+}
+
+let sendMensaje = (req,res,gestorBD) => {
+    let offerId = {'_id': gestorBD.mongo.ObjectID(req.params.id) };
+    let mensaje = {
+        autor: res.usuario,
+        offerId: offerId,
+        text: req.body.text
+    }
+    gestorBD.insertarMensaje(mensaje, result => {
+        if(result == null) {
+            res.status(500);
+            res.json({autenticado: false});
+        }else{
+            res.status(201);
+            res.json({
+                mensaje : "mensaje enviado",
+                _id : id
             });
         }
     });
