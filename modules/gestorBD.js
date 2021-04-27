@@ -167,5 +167,21 @@ module.exports = {
                 });
             }
         });
+    },obtenerMensajes : function(criterio,funcionCallback){
+        this.mongo.MongoClient.connect(this.app.get('db'), function(err, db) {
+            if (err) {
+                funcionCallback(null);
+            }else {
+                let collection = db.collection('mensajes');
+                collection.find(criterio).toArray(function(err, compras) {
+                    if (err) {
+                        funcionCallback(null);
+                    } else {
+                        funcionCallback(compras);
+                    }
+                    db.close();
+                });
+            }
+        });
     }
 }
