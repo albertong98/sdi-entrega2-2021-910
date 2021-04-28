@@ -8,6 +8,8 @@ module.exports = (app,gestorBD) => {
     app.get('/api/conversacion/:id/:email',(req,res) => getConversacion(req,res,gestorBD));
 
     app.get('/api/conversaciones', getConversaciones(req,res,gestorBD));
+
+    app.get('/api/conversacion/delete/:id/:email',(req,res) => deleteConversacion(req,res,gestorBD));
 }
 
 let obtenerOfertas = (res,gestorBD) => {
@@ -97,7 +99,7 @@ let getConversaciones = (req,res,gestorBD) => {
             });
         }else{
             criterio = {$or: [{'offerId': {$in: ofertas.map(o => o._id)}}, {'comprador' : res.usuario}]};
-            gestorBD.obtenerMensajes(criterio,conversaciones => {
+            gestorBD.obtenerConversaciones(criterio,conversaciones => {
                 if(conversaciones == null) {
                     res.status(500);
                     res.json({
@@ -108,6 +110,23 @@ let getConversaciones = (req,res,gestorBD) => {
                     res.send( JSON.stringify(conversaciones) );
                 }
             })
+        }
+    });
+}
+
+let deleteConversacion = (req,res,gestorBD) => {
+    let criterio = {'offerId' : gestorBD.mongo.ObjectID(req.params.id), 'email': req.params.email}
+
+    gestorBD.borrarConversacion(criterio, result => {
+        if(result == null){
+            res.status(500);
+            res.json({error: 'se ha producido un error'});
+        }else{
+            res.status(201);
+            res.json({
+                mensaje : "conversacion borrada",
+                _id : id
+            });
         }
     });
 }
