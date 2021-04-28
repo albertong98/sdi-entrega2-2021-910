@@ -3,7 +3,7 @@ module.exports = (app,gestorBD) => {
 
     app.post('/api/autenticar/',(req,res) => autenticarUsuario(req,res,gestorBD,app));
 
-    app.post('/api/offer/mensaje/:id',(req,res) => sendMensaje(req,res,gestorBD));
+    app.post('/api/conversacion/mensaje',(req,res) => sendMensaje(req,res,gestorBD));
 
     app.get('/api/conversacion/:id/:email',(req,res) => getConversacion(req,res,gestorBD));
 
@@ -49,13 +49,12 @@ let autenticarUsuario = (req,res,gestorBD,app) => {
 }
 
 let sendMensaje = (req,res,gestorBD) => {
-    let offerId = gestorBD.mongo.ObjectID(req.params.id);
     let mensaje = {
-        comprador: res.usuario,
+        comprador: req.body.comprador,
         autor: res.usuario,
-        offerId: offerId,
+        offerId: req.body.offerId,
         date: new Date().now(),
-        text: req.body.text
+        text: req.body.texto
     }
     gestorBD.insertarMensaje(mensaje, result => {
         if(result == null) {
@@ -91,6 +90,7 @@ let getConversacion = (req,res,gestorBD) => {
 
 let getConversaciones = (req,res,gestorBD) => {
     let criterio = { 'seller' : res.usuario }
+    let conversaciones;
     gestorBD.obtenerOfertas(criterio, ofertas => {
         if(ofertas == null) {
             res.status(500);
@@ -99,13 +99,22 @@ let getConversaciones = (req,res,gestorBD) => {
             });
         }else{
             criterio = {$or: [{'offerId': {$in: ofertas.map(o => o._id)}}, {'comprador' : res.usuario}]};
-            gestorBD.obtenerConversaciones(criterio,conversaciones => {
-                if(conversaciones == null) {
+            gestorBD.obtenerConversaciones(criterio,mensajes => {
+                if(mensajes == null) {
                     res.status(500);
                     res.json({
                         error: "se ha producido un error"
                     });
                 }else{
+                    mensajes.forEach(m => {
+                        let oferta = ofertas.find(o => o._id = m.offerId)
+                        let c = {
+                            title: oferta.title,
+                            ofertante: oferta.seller,
+                            comprador: m.comprador
+                        }
+                        conversaciones.push(c);
+                    });
                     res.status(201);
                     res.send( JSON.stringify(conversaciones) );
                 }

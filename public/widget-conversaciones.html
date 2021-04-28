@@ -1,0 +1,57 @@
+<div id="widget-amigos" >
+    <input type="text" class="form-control" placeholder="Filtrar por nombre"
+           id="filtro-nombre"/>
+    <button class="btn" onclick="cargarConversaciones()" >Actualizar</button>
+    <table class="table table-hover">
+        <thead>
+        <tr>
+            <th>Titulo</th>
+            <th>Vendedor</th>
+            <th>Interesado</th>
+            <th class="col-md-1"></th>
+        </tr>
+        </thead>
+        <tbody id="tablaCuerpo">
+
+        </tbody>
+    </table>
+</div>
+
+<script>
+    let conversaciones;
+    function cargarConversaciones(){
+        $.ajax({
+            url: URLbase + "/conversaciones",
+            type: "GET",
+            data: { },
+            dataType: 'json',
+            headers: { 'token': token },
+            success: function(respuesta) {
+                conversaciones = respuesta;
+                actualizarTabla(conversaciones);
+            },
+            error : function (error){
+                $( "#contenedor-principal" ).load("widget-login.html");
+            }
+        });
+    }
+    function actualizarTabla(conversacionesMostrar){
+        $( "#tablaCuerpo" ).empty(); // Vaciar la tabla
+        for (i = 0; i < conversacionesMostrar.length; i++) {
+            $( "#tablaCuerpo" ).append(
+                "<td>"+conversacionesMostrar[i].title+"</td>"+
+                "<td>"+conversacionesMostrar[i].ofertante"</td>"+
+                "<td>"+conversacionesMostrar[i].comprador+"</td>"+
+                "<td><a onclick=conversacion('"+conversacionesMostrar[i].offerId+"','"+conversacionesMostrar[i].comprador+"')>Abrir chat</a></td>";
+            )
+        }
+    }
+
+    function conversacion(id,email) {
+        offerId = id;
+        emailComprador = email;
+        $("#contenedor-principal").load("widget-mensajes.html");
+    }
+
+    cargarConversaciones();
+</script>
