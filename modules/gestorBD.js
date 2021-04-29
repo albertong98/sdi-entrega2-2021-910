@@ -216,5 +216,23 @@ module.exports = {
                 });
             }
         });
+    },marcarLeidos: function (criterio,funcionCallback) {
+        this.mongo.MongoClient.connect(this.app.get('db'), function(err, db) {
+            if (err) {
+                funcionCallback(null);
+            } else {
+                let collection = db.collection('mensajes');
+                collection.count(function(err,count){
+                    collection.updateMany(criterio,{$set : {"leido" : true}},function(err){
+                        if(err)
+                            funcionCallback(null);
+                        else{
+                            funcionCallback("success");
+                        }
+                        db.close();
+                    })
+                });
+            }
+        });
     }
 }

@@ -54,7 +54,8 @@ let sendMensaje = (req,res,gestorBD) => {
         autor: res.usuario,
         offerId: req.body.offerId,
         date: new Date().now(),
-        text: req.body.texto
+        text: req.body.texto,
+        leido: false
     }
     gestorBD.insertarMensaje(mensaje, result => {
         if(result == null) {
@@ -82,8 +83,16 @@ let getConversacion = (req,res,gestorBD) => {
                 error : "se ha producido un error"
             });
         }else{
-            res.status(201);
-            res.send( JSON.stringify(mensajes) );
+            criterio['autor'] = {$not: res.usuario};
+            gestorBD.marcarLeidos(criterio, result => {
+                if(result == null){
+                    res.status(500);
+                    res.json({error : "se ha producido un error al marcar mensajes como leidos"});
+                }else{
+                    res.status(201);
+                    res.send( JSON.stringify(mensajes) );
+                }
+            });
         }
     });
 }
@@ -94,23 +103,20 @@ let getConversaciones = (req,res,gestorBD) => {
     gestorBD.obtenerOfertas(criterio, ofertas => {
         if(ofertas == null) {
             res.status(500);
-            res.json({
-                error: "se ha producido un error"
-            });
+            res.json({error: "se ha producido un error"});
         }else{
             criterio = {$or: [{'offerId': {$in: ofertas.map(o => o._id)}}, {'comprador' : res.usuario}]};
             gestorBD.obtenerConversaciones(criterio,mensajes => {
                 if(mensajes == null) {
                     res.status(500);
-                    res.json({
-                        error: "se ha producido un error"
-                    });
+                    res.json({error: "se ha producido un error"});
                 }else{
                     mensajes.forEach(m => {
                         let oferta = ofertas.find(o => o._id = m.offerId)
                         let c = {
                             title: oferta.title,
                             ofertante: oferta.seller,
+                            offerId: oferta._id,
                             comprador: m.comprador
                         }
                         conversaciones.push(c);
