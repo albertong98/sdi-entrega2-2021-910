@@ -28,7 +28,7 @@ let getLogin = (req,res,swig) => {
 
 let logout = (req,res) => {
     req.session.usuario = null;
-    res.send("Usuario desconectado");
+    res.redirect('/identificarse');
 }
 
 let postUsuario = (app,req,res,gestorBD,swig) => {
@@ -70,19 +70,25 @@ let postUsuario = (app,req,res,gestorBD,swig) => {
 let identificarUsuario = (app,req,res,gestorBD) => {
     let seguro = app.get("crypto").createHmac('sha256', app.get('clave'))
         .update(req.body.password).digest('hex');
+    let loginValidator = require("../validators/loginValidator.js");
     let criterio = {
         email : req.body.email,
         password : seguro
     }
-    gestorBD.obtenerUsuarios(criterio, usuarios => {
-        if (usuarios == null || usuarios.length == 0) {
-            req.session.usuario = null;
-            reject(['Email o password incorrecto'],'/identificarse',req,res)
-        } else {
-            req.session.usuario = usuarios[0];
-            res.redirect("/offer/add");
-        }
-    });
+    let mensajes = loginValidator.validar(req.body.email,req.body.password);
+
+    if(mensajes.length > 0) reject(mensajes,'/identificarse',req,res);
+    else {
+        gestorBD.obtenerUsuarios(criterio, usuarios => {
+            if (usuarios == null || usuarios.length == 0) {
+                req.session.usuario = null;
+                reject(['Email o password incorrecto'], '/identificarse', req, res)
+            } else {
+                req.session.usuario = usuarios[0];
+                res.redirect("/offer/add");
+            }
+        });
+    }
 }
 
 let obtenerUsuarios = (req,res,swig,gestorBD) =>{

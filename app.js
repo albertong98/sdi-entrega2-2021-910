@@ -95,11 +95,10 @@ routerUsuarioAutor.use(function(req, res, next) {
     console.log("routerUsuarioAutor");
     let path = require('path');
     let id = path.basename(req.originalUrl);
-    let deleting = path.includes('delete');
+    let deleting = req.originalUrl.toString().includes('delete');
     gestorBD.obtenerOfertas(
         {_id: mongo.ObjectID(id) }, ofertas => {
-            console.log(canciones[0]);
-            if(deleting && ofertas[0].seller == req.session.usuario.email || oferta[0].seller != req.session.usuario.email){
+            if((deleting && ofertas[0].seller == req.session.usuario.email) || ofertas[0].seller != req.session.usuario.email){
                 next();
             } else {
                 req.session.mensajes.push({
@@ -112,8 +111,6 @@ routerUsuarioAutor.use(function(req, res, next) {
 });
 app.use('/offer/delete',routerUsuarioAutor);
 app.use('/offer/buy',routerUsuarioAutor);
-
-
 
 let routerSold = express.Router();
 routerSold.use((req,res,next) => {

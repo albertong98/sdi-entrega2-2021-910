@@ -21,12 +21,12 @@ let getOffer = (req,res,swig) => {
 }
 
 let postOffer = (req,res,gestorBD) => {
-    let offerAddValidator = require("./validators/offerAddValidator.js");
+    let offerAddValidator = require("../validators/offerAddValidator.js");
     let oferta = {
         title: req.body.title,
         details: req.body.details,
         price: req.body.price,
-        date: new Date().now(),
+        date: new Date(),
         seller: req.session.usuario.email
     }
     let mensajes = offerAddValidator.validar(oferta);
