@@ -7,7 +7,7 @@ module.exports = (app,gestorBD) => {
 
     app.get('/api/conversacion/:id/:email',(req,res) => getConversacion(req,res,gestorBD));
 
-    app.get('/api/conversaciones', getConversaciones(req,res,gestorBD));
+    app.get('/api/conversaciones', (req,res) => getConversaciones(req,res,gestorBD));
 
     app.get('/api/conversacion/delete/:id/:email',(req,res) => deleteConversacion(req,res,gestorBD));
 }
@@ -113,13 +113,12 @@ let getConversaciones = (req,res,gestorBD) => {
                 }else{
                     mensajes.forEach(m => {
                         let oferta = ofertas.find(o => o._id = m.offerId)
-                        let c = {
+                        conversaciones.push({
                             title: oferta.title,
                             ofertante: oferta.seller,
                             offerId: oferta._id,
                             comprador: m.comprador
-                        }
-                        conversaciones.push(c);
+                        });
                     });
                     res.status(201);
                     res.send( JSON.stringify(conversaciones) );

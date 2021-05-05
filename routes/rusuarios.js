@@ -34,7 +34,7 @@ let logout = (req,res) => {
 let postUsuario = (app,req,res,gestorBD,swig) => {
     let seguro = app.get("crypto").createHmac('sha256', app.get('clave'))
         .update(req.body.password).digest('hex');
-    let userSignupValidator = require("./validators/userSignupValidator.js");
+    let userSignupValidator = require("../validators/userSignupValidator.js");
 
     let usuario = {
         email : req.body.email,
@@ -44,7 +44,7 @@ let postUsuario = (app,req,res,gestorBD,swig) => {
         rol: 'estandar',
         saldo: 100.0
     }
-    let mensajes = userSignupValidator.validarUsuario(usuario);
+    let mensajes = userSignupValidator.validarUsuario(usuario,req.body.password,req.body.passwordConfirm);
 
     if(mensajes.length > 0) reject(mensajes,'/registrarse',req,res);
     else {
@@ -56,11 +56,8 @@ let postUsuario = (app,req,res,gestorBD,swig) => {
                     if (id == null) {
                         reject(['Error al registrar el usuario'],'/registrarse',req,res);
                     } else {
-                        req.session.mensajes.push({
-                            mensaje: 'Nuevo usuario registrado',
-                            tipoMensaje: 'alert-info'
-                        });
-                        res.redirect('/identificarse');
+                        req.session.usuario = usuario;
+                        res.redirect('/offer/add');
                     }
                 });
             } else {
@@ -83,7 +80,7 @@ let identificarUsuario = (app,req,res,gestorBD) => {
             reject(['Email o password incorrecto'],'/identificarse',req,res)
         } else {
             req.session.usuario = usuarios[0];
-            res.redirect("/");
+            res.redirect("/offer/add");
         }
     });
 }

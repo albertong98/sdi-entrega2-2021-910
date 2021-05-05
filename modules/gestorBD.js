@@ -234,5 +234,21 @@ module.exports = {
                 });
             }
         });
+    },updateSaldoUsuario: function (criterio,saldo,funcionCallback) {
+        this.mongo.MongoClient.connect(this.app.get('db'), function(err, db) {
+            if (err) {
+                funcionCallback(null);
+            } else {
+                let collection = db.collection('mensajes');
+                collection.updateOne(criterio,{$set : {"saldo" : saldo}},function(err){
+                    if(err)
+                        funcionCallback(null);
+                    else{
+                        funcionCallback("success");
+                    }
+                    db.close();
+                });
+            }
+        });
     }
 }

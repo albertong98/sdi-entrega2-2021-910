@@ -86,7 +86,9 @@ app.use('/offer/add',routerUsuarioSession);
 app.use('/offer/list',routerUsuarioSession);
 app.use('/offer/delete',routerUsuarioSession);
 app.use('/offer/buy',routerUsuarioSession);
+app.use('/offer/search',routerUsuarioSession);
 app.use('/compras',routerUsuarioSession);
+app.use('/user/list',routerUsuarioSession);
 
 let routerUsuarioAutor = express.Router();
 routerUsuarioAutor.use(function(req, res, next) {
@@ -111,6 +113,8 @@ routerUsuarioAutor.use(function(req, res, next) {
 app.use('/offer/delete',routerUsuarioAutor);
 app.use('/offer/buy',routerUsuarioAutor);
 
+
+
 let routerSold = express.Router();
 routerSold.use((req,res,next) => {
     let path = require('path');
@@ -129,6 +133,25 @@ routerSold.use((req,res,next) => {
     })
 });
 app.use('/offer/buy',routerSold);
+
+let routerSaldo = express.Router();
+routerSaldo.use((req,res,next) => {
+    let path = require('path');
+    let id = path.basename(req.originalUrl);
+
+    gestorBD.obtenerOfertas({_id: mongo.ObjectID(id) },ofertas => {
+       if(ofertas != null && req.session.usuario.saldo >= ofertas[0].price){
+           next();
+       }else{
+           req.session.mensajes.push({
+               mensaje: 'No dispone de saldo suficiente',
+               tipoMensaje: 'alert-danger'
+           });
+           res.redirect("/compras");
+       }
+    });
+});
+app.use('/offer/buy',routerSaldo);
 
 let routerAdministrador = express.Router();
 routerAdministrador.use((req,res,next) => {
@@ -162,6 +185,10 @@ app.use(express.static('public'));
 require("./routes/rusuarios.js")(app,swig,gestorBD);
 require("./routes/rofertas.js")(app,swig,gestorBD);
 require("./routes/rapiofertas.js")(app,gestorBD);
+
+app.get('/', function (req, res) {
+    res.send(swig.renderFile('views/index.html',res.locals));
+});
 
 https.createServer({
     key: fs.readFileSync('certificates/alice.key'),

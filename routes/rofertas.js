@@ -78,8 +78,10 @@ let deleteOffer = (req,res,swig,gestorBD) => {
 
 let getBusqueda = (req,res,gestorBD,swig) =>{
     let criterio = {};
-    if( req.query.busqueda != null )
-        criterio = { "title" : {$regex : ".*"+req.query.busqueda+".*"}  };
+    if( req.query.busqueda != null ) {
+        res.locals.busqueda = req.query.busqueda;
+        criterio = {"title": {$regex: ".*" + req.query.busqueda + ".*"}};
+    }
     let pg = parseInt(req.query.pg);
     if ( req.query.pg == null)
         pg = 1;
@@ -143,3 +145,4 @@ let reject = (mensajes,destino,req,res) => {
     });
     res.redirect(destino);
 }
+
