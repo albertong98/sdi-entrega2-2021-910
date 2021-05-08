@@ -80,8 +80,7 @@ let getBusqueda = (req,res,gestorBD,swig) =>{
     let criterio = {};
     if( req.query.busqueda != null ) {
         res.locals.busqueda = req.query.busqueda;
-        // MAYUSCULAS Y MINUSCULAS
-        criterio = {"title": {$regex: ".*" + req.query.busqueda + ".*"}};
+        criterio = {"title": {$regex: ".*" + req.query.busqueda + ".*",$options: 'i'}};
     }
     let pg = parseInt(req.query.pg);
     if ( req.query.pg == null)
