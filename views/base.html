@@ -26,7 +26,7 @@
       <ul class="nav navbar-nav">
         {% if usuario %}
         {% if usuario.rol == 'administrador' %}
-        <li><a href="/user/list">Lista de usuarios</a></li>
+        <li><a href="/usuario/list">Lista de usuarios</a></li>
         {% endif %}
         <li id="offers-menu" class="dropdown">
           <a class="dropdown-toggle" data-toggle="dropdown" href="#">Ofertas
@@ -35,6 +35,7 @@
           <ul class="dropdown-menu">
             <li><a href="/offer/list">Ofertas propias</a></li>
             <li><a href="/offer/add">Subir una oferta</a></li>
+            <li><a href="/compras">Mis pedidos</a></li>
           </ul>
         </li>
         {% endif %}

@@ -88,7 +88,8 @@ app.use('/offer/delete',routerUsuarioSession);
 app.use('/offer/buy',routerUsuarioSession);
 app.use('/offer/search',routerUsuarioSession);
 app.use('/compras',routerUsuarioSession);
-app.use('/user/list',routerUsuarioSession);
+app.use('/usuario/list',routerUsuarioSession);
+app.use('/usuario/delete',routerUsuarioSession);
 
 let routerUsuarioAutor = express.Router();
 routerUsuarioAutor.use(function(req, res, next) {
@@ -117,17 +118,16 @@ routerSold.use((req,res,next) => {
     let path = require('path');
     let id = path.basename(req.originalUrl);
     gestorBD.obtenerCompras({'ofertaId' : id },compras => {
-        if(compras != null && compras.length > 0)
-            next();
-        else{
+        if (compras != null && compras.length > 0) {
             req.session.mensajes.push({
-                mensaje: compras[0].comprador==req.session.usuario.email ? 'Ya ha comprado esa oferta'
-                                                                         : 'Esa oferta ya ha sido comprada por otro usuario',
+                mensaje: compras[0].comprador == req.session.usuario.email ? 'Ya ha comprado esa oferta'
+                    : 'Esa oferta ya ha sido comprada por otro usuario',
                 tipoMensaje: 'alert-danger'
             });
             res.redirect("/compras");
-        }
-    })
+        }else
+            next();
+    });
 });
 app.use('/offer/buy',routerSold);
 
@@ -182,6 +182,10 @@ app.use(express.static('public'));
 require("./routes/rusuarios.js")(app,swig,gestorBD);
 require("./routes/rofertas.js")(app,swig,gestorBD);
 require("./routes/rapiofertas.js")(app,gestorBD);
+
+//Insertar datos
+//require("./insertSampleData.js")(app,gestorBD);
+
 
 app.get('/', function (req, res) {
     res.send(swig.renderFile('views/index.html',res.locals));

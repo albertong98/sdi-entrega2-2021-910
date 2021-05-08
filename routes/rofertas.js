@@ -25,7 +25,7 @@ let postOffer = (req,res,gestorBD) => {
     let oferta = {
         title: req.body.title,
         details: req.body.details,
-        price: req.body.price,
+        price: parseFloat(req.body.price),
         date: new Date(),
         seller: req.session.usuario.email
     }
@@ -80,12 +80,13 @@ let getBusqueda = (req,res,gestorBD,swig) =>{
     let criterio = {};
     if( req.query.busqueda != null ) {
         res.locals.busqueda = req.query.busqueda;
+        // MAYUSCULAS Y MINUSCULAS
         criterio = {"title": {$regex: ".*" + req.query.busqueda + ".*"}};
     }
     let pg = parseInt(req.query.pg);
     if ( req.query.pg == null)
         pg = 1;
-    gestorBD.obtenerOfertasPg(criterio, (ofertas,total) => {
+    gestorBD.obtenerOfertasPg(criterio, pg,(ofertas,total) => {
         if(ofertas == null)
             res.send(swig.renderFile('views/error.html',{error: 'Error al buscar oferta'}));
         else{
@@ -116,7 +117,7 @@ let buyOffer = (req,res,swig,gestorBD) =>{
 
     gestorBD.insertarCompra(compra, function (idCompra) {
         if (idCompra == null) {
-            res.send(swig.renderFile('views/error.html',{error:'Error al comprar canción'}));
+            res.send(swig.renderFile('views/error.html',{error:'Error al comprar oferta'}));
         } else {
             res.redirect("/compras");
         }

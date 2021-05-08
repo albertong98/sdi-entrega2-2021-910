@@ -1,4 +1,4 @@
-<div id="widget-canciones" >
+<div id="widget-ofertas" >
     <input type="text" class="form-control" placeholder="Filtrar por nombre"
            id="filtro-nombre"/>
     <button class="btn" onclick="cargarOfertass()" >Actualizar</button>
@@ -54,13 +54,6 @@
         }
     }
     cargarOfertas();
-
-    //  Actualizar lista automaticamente
-    //    setInterval(function() {
-    //        cargarCanciones();
-    //    }, 5000);
-
-
 
     $('#filtro-nombre').on('input',function(e){
         var cancionesFiltradas = [];

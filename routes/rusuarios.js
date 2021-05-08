@@ -92,8 +92,9 @@ let identificarUsuario = (app,req,res,gestorBD) => {
 }
 
 let obtenerUsuarios = (req,res,swig,gestorBD) =>{
-    gestorBD.obtenerUsuarios({}, usuarios => {
-        if (usuarios == null || usuarios.length == 0) {
+    let criterio = {"email": {$nin:["admin@email.com"]}};
+    gestorBD.obtenerUsuarios(criterio, usuarios => {
+        if (usuarios == null) {
             req.session.usuario = null;
             res.send(swig.renderFile('views/error.html',{error:'error al listar'}));
         } else {
@@ -105,14 +106,23 @@ let obtenerUsuarios = (req,res,swig,gestorBD) =>{
 
 let deleteUsuarios = (req,res,gestorBD,swig) => {
     let criterio = {};
-    req.body.idUser.forEach(id => {
-        criterio = {"_id" : gestorBD.mongo.ObjectID(id) };
-        gestorBD.borrarUsuario(criterio, result => {
-            if(result == null)
-                res.send(swig.renderFile('views/error.html',{error:'error al eliminar usuario '+id }));
+    const { emailUser } = req.body;
+    if(Array.isArray(req.body.emailUser)){
+        emailUser.forEach(email => {
+            criterio = {"email": email};
+            gestorBD.borrarUsuario(criterio, result => {
+                if (result == null)
+                    res.send(swig.renderFile('views/error.html', {error: 'error al eliminar usuario ' + id}));
+            });
         });
-    });
-    res.redirect('/usuarios');
+    }else{
+        criterio = {"email": req.body.emailUser};
+        gestorBD.borrarUsuario(criterio, result => {
+            if (result == null)
+                res.send(swig.renderFile('views/error.html', {error: 'error al eliminar usuario ' + id}));
+        });
+    }
+    res.redirect('/usuario/list');
 }
 
 let reject = (mensajes,destino,req,res) => {
