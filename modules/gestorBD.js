@@ -119,7 +119,7 @@ module.exports = {
                 });
             }
         });
-    },insertarCompra: function(compra, funcionCallback) {
+    },insertarCompra: function(compra, saldo,funcionCallback) {
         this.mongo.MongoClient.connect(this.app.get('db'), function(err, db) {
             if (err) {
                 funcionCallback(null);
@@ -129,7 +129,12 @@ module.exports = {
                     if (err) {
                         funcionCallback(null);
                     } else {
-                        funcionCallback(result.ops[0]._id);
+                        db.collection('usuario').updateOne({'email': compra.comprador}, {$set : {"saldo" : saldo}},(err) => {
+                            if(err)
+                                funcionCallback(null);
+                            else
+                                funcionCallback(result.ops[0]._id);
+                        });
                     }
                     db.close();
                 });

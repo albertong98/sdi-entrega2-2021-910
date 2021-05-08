@@ -1,0 +1,8 @@
+.user-info {
+    float:left;
+    display: inline-block;
+    margin-left: 20px;
+    margin-right: 20px;
+    color: #FFF;
+    font-weight: bold
+}

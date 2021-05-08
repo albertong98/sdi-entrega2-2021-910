@@ -136,8 +136,9 @@ routerSaldo.use((req,res,next) => {
     let path = require('path');
     let id = path.basename(req.originalUrl);
 
-    gestorBD.obtenerOfertas({_id: mongo.ObjectID(id) },ofertas => {
+    gestorBD.obtenerOfertas({'_id': mongo.ObjectID(id) },ofertas => {
        if(ofertas != null && req.session.usuario.saldo >= ofertas[0].price){
+           req.session.usuario.saldo -= ofertas[0].price;
            next();
        }else{
            req.session.mensajes.push({

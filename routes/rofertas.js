@@ -114,9 +114,9 @@ let buyOffer = (req,res,swig,gestorBD) =>{
         ofertaId : ofertaId
     }
 
-    gestorBD.insertarCompra(compra, function (idCompra) {
+    gestorBD.insertarCompra(compra, req.session.usuario.saldo, function (idCompra){
         if (idCompra == null) {
-            res.send(swig.renderFile('views/error.html',{error:'Error al comprar oferta'}));
+            res.send(swig.renderFile('views/error.html', {error: 'Error al comprar oferta'}));
         } else {
             res.redirect("/compras");
         }
@@ -129,9 +129,15 @@ let getCompras = (req,res,swig,gestorBD) => {
     gestorBD.obtenerCompras(criterio, compras => {
         if(compras == null)
             res.send(swig.renderFile('views/error.html',{error : 'Error al obtener las compras del usuario'}));
-        else{
-            res.locals.ofertas = compras;
-            res.send(swig.renderFile('views/bcompras.html',res.locals));
+        else {
+            gestorBD.obtenerOfertas({'_id': {$in: compras.map(c => c.ofertaId) }}, ofertas => {
+                if(ofertas == null)
+                    res.send(swig.renderFile('views/error.html',{error : 'Error al obtener las compras del usuario'}));
+                else{
+                    res.locals.ofertas = ofertas;
+                    res.send(swig.renderFile('views/offer/bcompras.html', res.locals));
+                }
+            });
         }
     })
 }
