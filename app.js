@@ -127,10 +127,10 @@ routerEstandar.use((req,res,next) => {
         next();
     else{
         res.status(403);
-        res.send(swig.renderFile('/views/error.html',{error : 'Solo usuarios estandar pueden gestionar ofertas'}));
+        res.send(swig.renderFile('views/error.html',{error : 'Solo usuarios estandar pueden gestionar ofertas'}));
     }
 });
-app.use('/offer/add',routerEstandar);
+app.post('/offer/add',routerEstandar);
 app.use('/offer/delete',routerEstandar);
 app.use('/offer/buy',routerEstandar);
 
@@ -205,7 +205,7 @@ routerAdministrador.use((req,res,next) => {
        next();
    else{
        res.status(403);
-       res.send(swig.renderFile('/views/error.html',{error : 'Solo el usuario administrador puede gestionar los usuarios'}));
+       res.send(swig.renderFile('views/error.html',{error : 'Solo el usuario administrador puede gestionar los usuarios'}));
    }
 });
 app.use('/usuario/list',routerAdministrador);

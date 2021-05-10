@@ -45,7 +45,7 @@
             let mensaje =  "<tr id="+mensajesMostrar[i]._id+">"+
                 "<td>"+mensajesMostrar[i].autor+": </td>" +
                 "<td>"+mensajesMostrar[i].text+"</td>"+
-                "<td>"+mensajesMostrar[i].date.toString()+"</td>"+
+                "<td>"+getDate(mensajesMostrar[i].date.toString())+"</td>"+
                 "<td>";
             mensaje += mensajesMostrar[i].leido ? "leido" : "sin leer";
             mensaje += "</td></tr>";
@@ -78,4 +78,13 @@
             }
         });
     });
+
+    function getDate(dateToFormat){
+        let fullDateAndTime = dateToFormat.split("T");
+        let fullDate = fullDateAndTime[0].split('-');
+        let dateFormatted = fullDate[2]+"/"+ fullDate[1]+"/"+fullDate[0];
+        let time = fullDateAndTime[1].split('.')[0];
+        return dateFormatted+" "+time;
+    }
+
 </script>
