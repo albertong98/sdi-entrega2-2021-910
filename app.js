@@ -76,8 +76,10 @@ app.use('/api/conversaciones', routerUsuarioToken);
 let routerUsuarioAutorToken = express.Router();
 routerUsuarioAutorToken.use((req,res,next) => {
     console.log("routerUsuarioAutor");
-    let id = req.params.id;
-    let email = req.params.email;
+    let path = require('path');
+    let id = req.originalUrl.split('/')[3];
+    let email = path.basename(req.originalUrl);
+
     if(email == res.usuario)
         next();
     else {
@@ -85,6 +87,7 @@ routerUsuarioAutorToken.use((req,res,next) => {
             if (ofertas[0].seller == res.usuario)
                 next();
             else {
+
                 res.status(403);
                 res.json({
                     acceso : false,
@@ -118,7 +121,7 @@ app.use('/usuario/list',routerUsuarioSession);
 app.use('/usuario/delete',routerUsuarioSession);
 
 //Router para impedir que usuarios como el administrador puedan subir, comprar o borrar ofertas.
-let routerEstandar = express().Router();
+let routerEstandar = express.Router();
 routerEstandar.use((req,res,next) => {
     if(req.session.usuario.rol == 'estandar')
         next();
