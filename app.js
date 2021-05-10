@@ -40,6 +40,8 @@ let dburi = 'mongodb://admin:sdi@mywallapop-shard-00-00.vadns.mongodb.net:27017,
 let gestorBD = require("./modules/gestorBD.js");
 
 gestorBD.init(app,mongo);
+
+//Router para restringir el acceso a usuarios sin identificar a ciertas direcciones de la API Rest
 let routerUsuarioToken = express.Router();
 routerUsuarioToken.use(function(req, res, next) {
     let token = req.headers['token'] || req.body.token || req.query.token;
@@ -66,11 +68,11 @@ routerUsuarioToken.use(function(req, res, next) {
         });
     }
 });
-
 app.use('/api/offer', routerUsuarioToken);
 app.use('/api/conversacion/', routerUsuarioToken);
 app.use('/api/conversaciones', routerUsuarioToken);
 
+//Router para impedir que un usuario abra o elimine conversaciones ajenas
 let routerUsuarioAutorToken = express.Router();
 routerUsuarioAutorToken.use((req,res,next) => {
     console.log("routerUsuarioAutor");
@@ -94,6 +96,7 @@ routerUsuarioAutorToken.use((req,res,next) => {
 });
 app.use('/api/conversacion/:id/:email',routerUsuarioAutorToken);
 
+//Router para impedir el acceso a usuarios sin registrar el acceso a ciertas direcciones de la página web
 let routerUsuarioSession = express.Router();
 routerUsuarioSession.use(function(req, res, next) {
     console.log("routerUsuarioSession");
@@ -114,6 +117,21 @@ app.use('/compras',routerUsuarioSession);
 app.use('/usuario/list',routerUsuarioSession);
 app.use('/usuario/delete',routerUsuarioSession);
 
+//Router para impedir que usuarios como el administrador puedan subir, comprar o borrar ofertas.
+let routerEstandar = express().Router();
+routerEstandar.use((req,res,next) => {
+    if(req.session.usuario.rol == 'estandar')
+        next();
+    else{
+        res.status(403);
+        res.send(swig.renderFile('/views/error.html',{error : 'Solo usuarios estandar pueden gestionar ofertas'}));
+    }
+});
+app.use('/offer/add',routerEstandar);
+app.use('/offer/delete',routerEstandar);
+app.use('/offer/buy',routerEstandar);
+
+//Router para impedir que un usuario borre ofertas ajenas y compre ofertas propias
 let routerUsuarioAutor = express.Router();
 routerUsuarioAutor.use(function(req, res, next) {
     console.log("routerUsuarioAutor");
@@ -136,6 +154,7 @@ routerUsuarioAutor.use(function(req, res, next) {
 app.use('/offer/delete',routerUsuarioAutor);
 app.use('/offer/buy',routerUsuarioAutor);
 
+//Router para impedir que se vuelvan a comprar o se borren ofertas ya vendidas
 let routerSold = express.Router();
 routerSold.use((req,res,next) => {
     let path = require('path');
@@ -153,7 +172,9 @@ routerSold.use((req,res,next) => {
     });
 });
 app.use('/offer/buy',routerSold);
+app.use('/offer/delete',routerSold);
 
+//Router para comprobar que el usuario dispone de suficiente saldo
 let routerSaldo = express.Router();
 routerSaldo.use((req,res,next) => {
     let path = require('path');
@@ -174,6 +195,7 @@ routerSaldo.use((req,res,next) => {
 });
 app.use('/offer/buy',routerSaldo);
 
+//Router que impide el acceso a la gestión de usuarios a personas distintas al administrador
 let routerAdministrador = express.Router();
 routerAdministrador.use((req,res,next) => {
    if(req.session.usuario.rol == 'administrador')
@@ -186,6 +208,7 @@ routerAdministrador.use((req,res,next) => {
 app.use('/usuario/list',routerAdministrador);
 app.use('/usuario/delete',routerAdministrador);
 
+//Router que permite que el usuario identificado y los mensajes sean accesibles por las vistas
 app.use((req,res,next) => {
     if(req.session.mensajes == null)
         req.session.mensajes = [];
@@ -207,7 +230,7 @@ require("./routes/rusuarios.js")(app,swig,gestorBD);
 require("./routes/rofertas.js")(app,swig,gestorBD);
 require("./routes/rapiofertas.js")(app,gestorBD);
 
-//Insertar datos
+//Insertar datos de prueba
 //require("./insertSampleData.js")(app,gestorBD);
 
 

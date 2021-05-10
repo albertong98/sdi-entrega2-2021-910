@@ -47,7 +47,6 @@ let autenticarUsuario = (req,res,gestorBD,app) => {
 }
 
 let sendMensaje = (req,res,gestorBD) => {
-    console.log("llegue");
     let mensaje = {
         comprador: req.body.comprador,
         autor: res.usuario,
