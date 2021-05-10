@@ -58,7 +58,6 @@ routerUsuarioToken.use(function(req, res, next) {
                 next();
             }
         });
-
     } else {
         res.status(403);
         res.json({
@@ -71,6 +70,29 @@ routerUsuarioToken.use(function(req, res, next) {
 app.use('/api/offer', routerUsuarioToken);
 app.use('/api/conversacion/', routerUsuarioToken);
 app.use('/api/conversaciones', routerUsuarioToken);
+
+let routerUsuarioAutorToken = express.Router();
+routerUsuarioAutorToken.use((req,res,next) => {
+    console.log("routerUsuarioAutor");
+    let id = req.params.id;
+    let email = req.params.email;
+    if(email == res.usuario)
+        next();
+    else {
+        gestorBD.obtenerOfertas({_id: mongo.ObjectID(id)}, ofertas => {
+            if (ofertas[0].seller == res.usuario)
+                next();
+            else {
+                res.status(403);
+                res.json({
+                    acceso : false,
+                    mensaje: 'No puede gestionar conversaciones ajenas'
+                });
+            }
+        })
+    }
+});
+app.use('/api/conversacion/:id/:email',routerUsuarioAutorToken);
 
 let routerUsuarioSession = express.Router();
 routerUsuarioSession.use(function(req, res, next) {
