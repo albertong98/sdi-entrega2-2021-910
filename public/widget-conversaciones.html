@@ -16,6 +16,8 @@
 </div>
 
 <script>
+    window.history.pushState("", "", "/cliente.html?w=conversaciones");
+
     let conversaciones;
     function cargarConversaciones(){
         $.ajax({
@@ -37,11 +39,14 @@
         $( "#tablaCuerpo" ).empty(); // Vaciar la tabla
         for (i = 0; i < conversacionesMostrar.length; i++) {
             $( "#tablaCuerpo" ).append(
+                "<tr id="+i.toString()+">"+
                 "<td>"+conversacionesMostrar[i].title+"</td>"+
-                "<td>"+conversacionesMostrar[i].ofertante"</td>"+
+                "<td>"+conversacionesMostrar[i].ofertante+"</td>"+
                 "<td>"+conversacionesMostrar[i].comprador+"</td>"+
-                "<td><a onclick=conversacion('"+conversacionesMostrar[i].offerId+"','"+conversacionesMostrar[i].comprador+"')>Abrir chat</a></td>";
-            )
+                "<td>"+
+                "<a onclick=conversacion('"+conversacionesMostrar[i].offerId+"','"+conversacionesMostrar[i].comprador+"')>Abrir chat</a><br>"+
+                "<a onclick=eliminar('"+conversacionesMostrar[i].offerId+"','"+conversacionesMostrar[i].comprador+"',"+i.toString()+")>Eliminar chat</a>"+
+                "</td></tr>");
         }
     }
 
@@ -52,4 +57,20 @@
     }
 
     cargarConversaciones();
+
+    function eliminar(id,email,i) {
+        $.ajax({
+            url: URLbase + "/conversacion/"+id+"/"+email,
+            type: "DELETE",
+            data: { },
+            dataType: 'json',
+            headers: { "token": token },
+            success: function(respuesta) {
+               $("#"+i).remove();
+            },
+            error : function (error){
+                $( "#contenedor-principal" ).load("widget-login.html");
+            }
+        });
+    }
 </script>

@@ -52,7 +52,6 @@ routerUsuarioToken.use(function(req, res, next) {
                     error: 'Token invalido o caducado'
                 });
                 return;
-
             } else {
                 // dejamos correr la petición
                 res.usuario = infoToken.usuario;
@@ -70,6 +69,8 @@ routerUsuarioToken.use(function(req, res, next) {
 });
 
 app.use('/api/offer', routerUsuarioToken);
+app.use('/api/conversacion/', routerUsuarioToken);
+app.use('/api/conversaciones', routerUsuarioToken);
 
 let routerUsuarioSession = express.Router();
 routerUsuarioSession.use(function(req, res, next) {

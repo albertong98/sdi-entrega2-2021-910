@@ -162,7 +162,7 @@ module.exports = {
                 funcionCallback(null);
             } else {
                 let collection = db.collection('mensajes');
-                collection.insertOne(compra, function(err, result) {
+                collection.insertOne(mensaje, function(err, result) {
                     if (err) {
                         funcionCallback(null);
                     } else {
@@ -194,8 +194,11 @@ module.exports = {
                 funcionCallback(null);
             }else {
                 let collection = db.collection('mensajes');
-                collection.aggregate([{"$group": { "_id": { offerId: "$offerId", comprador: "$comprador" }}}])
-                .find(criterio).toArray(function(err, conversaciones) {
+                collection.aggregate([{"$group":
+                        {
+                            "_id": { ofertaId: "$ofertaId", comprador: "$comprador" }
+                        }}])
+                .toArray(function(err, conversaciones) {
                     if (err) {
                         funcionCallback(null);
                     } else {
@@ -210,7 +213,7 @@ module.exports = {
             if (err) {
                 funcionCallback(null);
             } else {
-                let collection = db.collection('ofertas');
+                let collection = db.collection('mensajes');
                 collection.deleteMany(criterio,function(err, result) {
                     if (err) {
                         funcionCallback(null);
@@ -236,22 +239,6 @@ module.exports = {
                         }
                         db.close();
                     })
-                });
-            }
-        });
-    },updateSaldoUsuario: function (criterio,saldo,funcionCallback) {
-        this.mongo.MongoClient.connect(this.app.get('db'), function(err, db) {
-            if (err) {
-                funcionCallback(null);
-            } else {
-                let collection = db.collection('mensajes');
-                collection.updateOne(criterio,{$set : {"saldo" : saldo}},function(err){
-                    if(err)
-                        funcionCallback(null);
-                    else{
-                        funcionCallback("success");
-                    }
-                    db.close();
                 });
             }
         });

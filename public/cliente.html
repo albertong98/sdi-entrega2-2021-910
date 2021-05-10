@@ -1,6 +1,6 @@
 <html lang="en">
 <head>
-    <title>jQuery uoMusic </title>
+    <title>jQuery myWallapop </title>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"/>
@@ -22,7 +22,7 @@
         </div>
         <div class="collapse navbar-collapse" id="myNavbar">
             <ul class="nav navbar-nav" id="barra-menu">
-                <li></li>
+                <li><a onclick=widgetConversaciones()>Conversaciones</a></li>
             </ul>
             <ul class="nav navbar-nav navbar-right" id="barra-menu-derecha">
 
@@ -50,6 +50,12 @@
         let w = url.searchParams.get("w");
         if ( w == "login"){
             $( "#contenedor-principal" ).load("widget-login.html");
+        }if ( w == "ofertas"){
+            $( "#contenedor-principal" ).load("widget-ofertas.html");
+        }if ( w == "mensajes"){
+            $( "#contenedor-principal" ).load("widget-mensajes.html");
+        }if ( w == "conversaciones"){
+            $( "#contenedor-principal" ).load("widget-conversaciones.html");
         }
     }
 

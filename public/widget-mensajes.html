@@ -19,10 +19,12 @@
     </div>
 </div>
 <script>
+    window.history.pushState("", "", "/cliente.html?w=mensajes");
+
     let mensajes;
     function cargarMensajes(){
         $.ajax({
-            url: URLbase + "/conversacion/"+offerId+"/"+email,
+            url: URLbase + "/conversacion/"+offerId+"/"+emailComprador,
             type: "GET",
             data: { },
             dataType: 'json',
@@ -32,6 +34,7 @@
                 actualizarTabla(mensajes);
             },
             error : function (error){
+                console.log("bad news");
                 $( "#contenedor-principal" ).load("widget-login.html");
             }
         });
@@ -42,7 +45,10 @@
             let mensaje =  "<tr id="+mensajesMostrar[i]._id+">"+
                 "<td>"+mensajesMostrar[i].autor+": </td>" +
                 "<td>"+mensajesMostrar[i].text+"</td>"+
-                "<td>"+mensajesMostrar[i].date+"</td>";
+                "<td>"+mensajesMostrar[i].date.toString()+"</td>"+
+                "<td>";
+            mensaje += mensajesMostrar[i].leido ? "leido" : "sin leer";
+            mensaje += "</td></tr>";
 
             $( "#tablaMensajes" ).append(mensaje);
         }
@@ -53,12 +59,13 @@
     setInterval(function() { cargarMensajes(); }, 5000);
 
     $("#boton-enviar").click(function(){
+        console.log("casi");
         $.ajax({
             url: URLbase + "/conversacion/mensaje",
             type: "POST",
             data: {
-                offerId: mensajes[0].offerId,
-                comprador: mensajes[0].comprador,
+                offerId: offerId,
+                comprador: emailComprador,
                 texto: $("#mensaje").val()
             },
             dataType: 'json',

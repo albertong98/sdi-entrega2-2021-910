@@ -9,11 +9,11 @@ module.exports = (app,gestorBD) => {
 
     app.get('/api/conversaciones', (req,res) => getConversaciones(req,res,gestorBD));
 
-    app.get('/api/conversacion/delete/:id/:email',(req,res) => deleteConversacion(req,res,gestorBD));
+    app.delete('/api/conversacion/:id/:email',(req,res) => deleteConversacion(req,res,gestorBD));
 }
 
 let obtenerOfertas = (res,gestorBD) => {
-    gestorBD.obtenerOfertas( {'seller': {$not: res.usuario }} , ofertas => {
+    gestorBD.obtenerOfertas( {'seller': {$nin: [res.usuario] }} , ofertas => {
         if (ofertas == null) {
             res.status(500);
             res.json({
@@ -21,7 +21,7 @@ let obtenerOfertas = (res,gestorBD) => {
             })
         } else {
             res.status(200);
-            res.send( JSON.stringify(ofertas) );
+            res.json({email: res.usuario,ofertas:ofertas});
         }
     });
 }
@@ -36,9 +36,7 @@ let autenticarUsuario = (req,res,gestorBD,app) => {
             res.status(401);
             res.json({ autenticado: false });
         }else{
-            let token = app.get('jwt').sign(
-                {usuario: criterio.email , tiempo: Date.now()/1000},
-                "secreto");
+            let token = app.get('jwt').sign({usuario: criterio.email , tiempo: Date.now()/1000}, "secreto");
             res.status(200);
             res.json({
                 autenticado: true,
@@ -49,11 +47,12 @@ let autenticarUsuario = (req,res,gestorBD,app) => {
 }
 
 let sendMensaje = (req,res,gestorBD) => {
+    console.log("llegue");
     let mensaje = {
         comprador: req.body.comprador,
         autor: res.usuario,
-        offerId: req.body.offerId,
-        date: new Date().now(),
+        ofertaId: gestorBD.mongo.ObjectID(req.body.offerId),
+        date: new Date(),
         text: req.body.texto,
         leido: false
     }
@@ -67,14 +66,14 @@ let sendMensaje = (req,res,gestorBD) => {
             res.status(201);
             res.json({
                 mensaje : "mensaje enviado",
-                _id : id
+                _id : result
             });
         }
     });
 }
 
 let getConversacion = (req,res,gestorBD) => {
-    let criterio = {'offerId': gestorBD.mongo.ObjectID(req.params.id), 'comprador': {$in: [res.usuario, req.params.email]}};
+    let criterio = {'ofertaId': gestorBD.mongo.ObjectID(req.params.id), 'comprador': {$in: [res.usuario, req.params.email]}};
 
     gestorBD.obtenerMensajes(criterio, mensajes => {
         if(mensajes == null){
@@ -83,7 +82,7 @@ let getConversacion = (req,res,gestorBD) => {
                 error : "se ha producido un error"
             });
         }else{
-            criterio['autor'] = {$not: res.usuario};
+            criterio['autor'] = {$nin: [res.usuario]};
             gestorBD.marcarLeidos(criterio, result => {
                 if(result == null){
                     res.status(500);
@@ -99,7 +98,7 @@ let getConversacion = (req,res,gestorBD) => {
 
 let getConversaciones = (req,res,gestorBD) => {
     let criterio = { 'seller' : res.usuario }
-    let conversaciones;
+    let conversaciones = [];
     gestorBD.obtenerOfertas(criterio, ofertas => {
         if(ofertas == null) {
             res.status(500);
@@ -111,17 +110,23 @@ let getConversaciones = (req,res,gestorBD) => {
                     res.status(500);
                     res.json({error: "se ha producido un error"});
                 }else{
-                    mensajes.forEach(m => {
-                        let oferta = ofertas.find(o => o._id = m.offerId)
-                        conversaciones.push({
-                            title: oferta.title,
-                            ofertante: oferta.seller,
-                            offerId: oferta._id,
-                            comprador: m.comprador
-                        });
+                    criterio = {"_id" : {$in: mensajes.map(m => m._id.ofertaId)}}
+                    gestorBD.obtenerOfertas(criterio, offers => {
+                        if (offers.length > 0) {
+                            mensajes.forEach(m => {
+                                let oferta = offers.find(o => o._id.toString() === m._id.ofertaId.toString());
+                                conversaciones.push({
+                                    title: oferta.title,
+                                    ofertante: oferta.seller,
+                                    offerId: oferta._id,
+                                    comprador: m._id.comprador
+                                });
+                            });
+                        }
+                        res.status(201);
+                        res.send(JSON.stringify(conversaciones));
                     });
-                    res.status(201);
-                    res.send( JSON.stringify(conversaciones) );
+
                 }
             })
         }
@@ -129,18 +134,15 @@ let getConversaciones = (req,res,gestorBD) => {
 }
 
 let deleteConversacion = (req,res,gestorBD) => {
-    let criterio = {'offerId' : gestorBD.mongo.ObjectID(req.params.id), 'email': req.params.email}
+    let criterio = {'ofertaId' : gestorBD.mongo.ObjectID(req.params.id), 'comprador': req.params.email}
 
     gestorBD.borrarConversacion(criterio, result => {
         if(result == null){
             res.status(500);
             res.json({error: 'se ha producido un error'});
         }else{
-            res.status(201);
-            res.json({
-                mensaje : "conversacion borrada",
-                _id : id
-            });
+            res.status(200);
+            res.send(JSON.stringify(result));
         }
     });
 }
