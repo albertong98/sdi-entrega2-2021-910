@@ -129,7 +129,7 @@ let deleteUsersFromBD = (criterio,res,gestorBD,swig) => {
             console.error("Error el la base de datos al intentar borrar usuarios "+criterio.toString());
             res.send(swig.renderFile('views/error.html', {error: 'error al eliminar usuarios'}));
         }else {
-            console.info('Usuarios'+criterio.toString()+' borrados satisfactoriamente');
+            console.info('Usuarios '+criterio.toString()+' borrados satisfactoriamente');
             res.redirect('/usuario/list');
         }
     });

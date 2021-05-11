@@ -13,13 +13,16 @@ module.exports = (app,gestorBD) => {
 }
 
 let obtenerOfertas = (res,gestorBD) => {
+    console.info('Usuario '+res.usuario+' accediendo a sus publicaciones');
     gestorBD.obtenerOfertas( {'seller': {$nin: [res.usuario] }} , ofertas => {
         if (ofertas == null) {
             res.status(500);
+            console.error('Error en la base de datos al obtener las publicaciones del usuario '+res.usuario);
             res.json({
                 error : "se ha producido un error"
             })
         } else {
+            console.info('Publicaciones de '+res.usuario+' obtenidas satisfactoriamente.');
             res.status(200);
             res.json({email: res.usuario,ofertas:ofertas});
         }
@@ -27,6 +30,7 @@ let obtenerOfertas = (res,gestorBD) => {
 }
 
 let autenticarUsuario = (req,res,gestorBD,app) => {
+    console.info('Usuario '+req.body.email+' intentando iniciar sesion');
     let seguro = app.get('crypto').createHmac('sha256',app.get('clave')).update(req.body.password).digest('hex');
 
     let criterio = { email: req.body.email, password: seguro };
@@ -34,8 +38,10 @@ let autenticarUsuario = (req,res,gestorBD,app) => {
     gestorBD.obtenerUsuarios(criterio, usuarios => {
         if(usuarios == null || usuarios.length == 0){
             res.status(401);
+            console.warn('El usuario '+req.body.email+' no ha podido autenticarse');
             res.json({ autenticado: false });
         }else{
+            console.info('Usuario '+req.body.email+' autenticado correctamente.');
             let token = app.get('jwt').sign({usuario: criterio.email , tiempo: Date.now()/1000}, "secreto");
             res.status(200);
             res.json({
@@ -47,6 +53,7 @@ let autenticarUsuario = (req,res,gestorBD,app) => {
 }
 
 let sendMensaje = (req,res,gestorBD) => {
+    console.info('Usuario '+res.usuario+' intentando enviar un mensaje a una oferta');
     let mensaje = {
         comprador: req.body.comprador,
         autor: res.usuario,
@@ -58,6 +65,7 @@ let sendMensaje = (req,res,gestorBD) => {
     gestorBD.insertarMensaje(mensaje, result => {
         if(result == null) {
             res.status(500);
+            console.error('Error al insertar el mensaje en la base de datos');
             res.json({
                 error : "se ha producido un error"
             });
@@ -72,11 +80,13 @@ let sendMensaje = (req,res,gestorBD) => {
 }
 
 let getConversacion = (req,res,gestorBD) => {
+    console.info('Usuario '+res.usuario+' intentando acceder a la conversacion para la oferta '+req.params.id+' e interesado '+req.params.email);
     let criterio = {'ofertaId': gestorBD.mongo.ObjectID(req.params.id), 'comprador': {$in: [res.usuario, req.params.email]}};
 
     gestorBD.obtenerMensajes(criterio, mensajes => {
         if(mensajes == null){
             res.status(500);
+            console.error('Error al acceder a la conversacion para la oferta '+req.params.id+' e interesado '+req.params.email);
             res.json({
                 error : "se ha producido un error"
             });
@@ -85,9 +95,11 @@ let getConversacion = (req,res,gestorBD) => {
             gestorBD.marcarLeidos(criterio, result => {
                 if(result == null){
                     res.status(500);
+                    console.error('Error al acceder al marcar mensajes como leidos de la conversacion para la oferta '+req.params.id+' e interesado '+req.params.email);
                     res.json({error : "se ha producido un error al marcar mensajes como leidos"});
                 }else{
                     res.status(201);
+                    console.info('Conversacion para la oferta '+req.params.id+' e interesado '+req.params.email+' obtenida correctamente');
                     res.send( JSON.stringify(mensajes) );
                 }
             });
@@ -96,16 +108,19 @@ let getConversacion = (req,res,gestorBD) => {
 }
 
 let getConversaciones = (req,res,gestorBD) => {
+    console.info('Usuario '+res.usuario+' accediendo a su lista de conversaciones.');
     let criterio = { 'seller' : res.usuario }
     let conversaciones = [];
     gestorBD.obtenerOfertas(criterio, ofertas => {
         if(ofertas == null) {
+            console.error('Error al recuperar las ofertas de la base de datos para el usuario '+res.usuario)
             res.status(500);
             res.json({error: "se ha producido un error"});
         }else{
             criterio = {$or: [{'offerId': {$in: ofertas.map(o => o._id)}}, {'comprador' : res.usuario}]};
             gestorBD.obtenerConversaciones(criterio,mensajes => {
                 if(mensajes == null) {
+                    console.error('Error al recuperar las conversaciones de la base de datos para el usuario '+res.usuario)
                     res.status(500);
                     res.json({error: "se ha producido un error"});
                 }else{
@@ -122,6 +137,7 @@ let getConversaciones = (req,res,gestorBD) => {
                                 });
                             });
                         }
+                        console.error('Conversaciones de '+res.usuario+' obtenidas satisfactoriamente.')
                         res.status(201);
                         res.send(JSON.stringify(conversaciones));
                     });
@@ -133,14 +149,17 @@ let getConversaciones = (req,res,gestorBD) => {
 }
 
 let deleteConversacion = (req,res,gestorBD) => {
+    console.info('Usuario '+res.usuario+' borrando la conversacion para la oferta '+req.params.id+' e interesado '+req.params.email);
     let criterio = {'ofertaId' : gestorBD.mongo.ObjectID(req.params.id), 'comprador': req.params.email}
 
     gestorBD.borrarConversacion(criterio, result => {
         if(result == null){
             res.status(500);
+            console.error('Error al borrar la conversacion de la base de datos');
             res.json({error: 'se ha producido un error'});
         }else{
             res.status(200);
+            console.info('Conversacion eliminada satisfactoriamente');
             res.send(JSON.stringify(result));
         }
     });
