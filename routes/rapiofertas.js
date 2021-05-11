@@ -137,7 +137,7 @@ let getConversaciones = (req,res,gestorBD) => {
                                 });
                             });
                         }
-                        console.error('Conversaciones de '+res.usuario+' obtenidas satisfactoriamente.')
+                        console.info('Conversaciones de '+res.usuario+' obtenidas satisfactoriamente.');
                         res.status(201);
                         res.send(JSON.stringify(conversaciones));
                     });

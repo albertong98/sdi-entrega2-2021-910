@@ -44,10 +44,12 @@ gestorBD.init(app,mongo);
 //Router para restringir el acceso a usuarios sin identificar a ciertas direcciones de la API Rest
 let routerUsuarioToken = express.Router();
 routerUsuarioToken.use(function(req, res, next) {
+    console.info('Comprobando que el usuario está autenticado y que tiene un token válido');
     let token = req.headers['token'] || req.body.token || req.query.token;
     if (token != null) {
         jwt.verify(token, 'secreto', function(err, infoToken) {
             if (err || (Date.now()/1000 - infoToken.tiempo) > 240 ){
+                console.warn('Token invalido o caducado');
                 res.status(403); // Forbidden
                 res.json({
                     acceso : false,
@@ -56,11 +58,13 @@ routerUsuarioToken.use(function(req, res, next) {
                 return;
             } else {
                 // dejamos correr la petición
+                console.info('Comprobación satisfactoria');
                 res.usuario = infoToken.usuario;
                 next();
             }
         });
     } else {
+        console.warn('El usuario no está autenticado');
         res.status(403);
         res.json({
             acceso : false,
@@ -75,19 +79,21 @@ app.use('/api/conversaciones', routerUsuarioToken);
 //Router para impedir que un usuario abra o elimine conversaciones ajenas
 let routerUsuarioAutorToken = express.Router();
 routerUsuarioAutorToken.use((req,res,next) => {
-    console.log("routerUsuarioAutor");
     let path = require('path');
     let id = req.body.offerId || req.originalUrl.split('/')[3];
     let email = req.body.comprador || path.basename(req.originalUrl);
 
-    if(email == res.usuario)
+    console.info('Comprobando que el usuario '+res.usuario+' es participante de la conversacion');
+    if(email == res.usuario) {
+        console.info('Comprobación satisfactoria');
         next();
-    else {
+    }else {
         gestorBD.obtenerOfertas({_id: mongo.ObjectID(id)}, ofertas => {
-            if (ofertas[0].seller == res.usuario)
+            if (ofertas[0].seller == res.usuario) {
+                console.info('Comprobación satisfactoria');
                 next();
-            else {
-
+            }else {
+                console.warn('El usuario '+res.usuario+' no ha podido acceder a la conversación al no ser participante');
                 res.status(403);
                 res.json({
                     acceso : false,
@@ -103,20 +109,17 @@ app.use('/api/conversacion/mensaje',routerUsuarioAutorToken);
 //Router para impedir el acceso a usuarios sin registrar el acceso a ciertas direcciones de la página web
 let routerUsuarioSession = express.Router();
 routerUsuarioSession.use(function(req, res, next) {
-    console.log("routerUsuarioSession");
+    console.info('Comprobando que el usuario está autenticado');
     if ( req.session.usuario ) {
         // dejamos correr la petición
+        console.info('Comprobación satisfactoria');
         next();
     } else {
-        console.log("va a : "+req.session.destino)
+        console.warn('Usuario sin autenticar intentando acceder a: '+req.session.destino);
         res.redirect("/identificarse");
     }
 });
-app.use('/offer/add',routerUsuarioSession);
-app.use('/offer/list',routerUsuarioSession);
-app.use('/offer/delete',routerUsuarioSession);
-app.use('/offer/buy',routerUsuarioSession);
-app.use('/offer/search',routerUsuarioSession);
+app.use('/offer/*',routerUsuarioSession);
 app.use('/compras',routerUsuarioSession);
 app.use('/usuario/list',routerUsuarioSession);
 app.use('/usuario/delete',routerUsuarioSession);
@@ -124,9 +127,12 @@ app.use('/usuario/delete',routerUsuarioSession);
 //Router para impedir que usuarios como el administrador puedan subir, comprar o borrar ofertas.
 let routerEstandar = express.Router();
 routerEstandar.use((req,res,next) => {
-    if(req.session.usuario.rol == 'estandar')
+    console.info('Comprobando que el usuario'+req.session.usuario.email+' tiene permiso para realizar la petición');
+    if(req.session.usuario.rol == 'estandar') {
+        console.info('Comprobación satisfactoria');
         next();
-    else{
+    }else{
+        console.info('El usuario '+req.session.usuario.email+' no tiene permisos para realizar la petición');
         res.status(403);
         res.send(swig.renderFile('views/error.html',{error : 'Solo usuarios estandar pueden gestionar ofertas'}));
     }
@@ -138,15 +144,17 @@ app.use('/offer/buy',routerEstandar);
 //Router para impedir que un usuario borre ofertas ajenas y compre ofertas propias
 let routerUsuarioAutor = express.Router();
 routerUsuarioAutor.use(function(req, res, next) {
-    console.log("routerUsuarioAutor");
     let path = require('path');
     let id = path.basename(req.originalUrl);
     let deleting = req.originalUrl.toString().includes('delete');
+    console.info('Comprobando si el usuario '+req.session.usuario.email +' es dueño de la oferta '+id);
     gestorBD.obtenerOfertas(
         {_id: mongo.ObjectID(id) }, ofertas => {
             if((deleting && ofertas[0].seller == req.session.usuario.email) || ofertas[0].seller != req.session.usuario.email){
+                console.info('Comprobación satisfactoria.');
                 next();
             } else {
+                console.warn('El usuario '+req.session.usuario.email+' ha realizado una petición no permitida para la oferta '+id);
                 req.session.mensajes.push({
                     mensaje: deleting ? 'Solo puede borrar ofertas propias' : 'No puede comprar sus ofertas',
                     tipoMensaje: 'alert-danger'
@@ -163,16 +171,20 @@ let routerSold = express.Router();
 routerSold.use((req,res,next) => {
     let path = require('path');
     let id = path.basename(req.originalUrl);
+    console.info('Comprobando si la oferta '+id+' está vendida');
     gestorBD.obtenerCompras({'ofertaId' : id },compras => {
         if (compras != null && compras.length > 0) {
+            console.warn('La oferta '+id+' ya está vendida');
             req.session.mensajes.push({
                 mensaje: compras[0].comprador == req.session.usuario.email ? 'Ya ha comprado esa oferta'
                     : 'Esa oferta ya ha sido comprada por otro usuario',
                 tipoMensaje: 'alert-danger'
             });
             res.redirect("/compras");
-        }else
+        }else {
+            console.info('Comprobación satisfactoria.');
             next();
+        }
     });
 });
 app.use('/offer/buy',routerSold);
@@ -183,12 +195,14 @@ let routerSaldo = express.Router();
 routerSaldo.use((req,res,next) => {
     let path = require('path');
     let id = path.basename(req.originalUrl);
-
+    console.info('Comprobando si el usuario '+req.session.usuario.email+' dispone de suficiente saldo para comprar la oferta '+id);
     gestorBD.obtenerOfertas({'_id': mongo.ObjectID(id) },ofertas => {
        if(ofertas != null && req.session.usuario.saldo >= ofertas[0].price){
+           console.info('Comprobación satisfactoria');
            req.session.usuario.saldo -= ofertas[0].price;
            next();
        }else{
+           console.info('El usuario'+req.session.usuario.email+' no dispone de saldo suficiente para comprar la oferta '+id);
            req.session.mensajes.push({
                mensaje: 'No dispone de saldo suficiente',
                tipoMensaje: 'alert-danger'
@@ -202,9 +216,12 @@ app.use('/offer/buy',routerSaldo);
 //Router que impide el acceso a la gestión de usuarios a personas distintas al administrador
 let routerAdministrador = express.Router();
 routerAdministrador.use((req,res,next) => {
-   if(req.session.usuario.rol == 'administrador')
+    console.info('Comprobando si el usuario '+req.session.usuario.email+' dispone de permisos de administrador para acceder al recurso');
+   if(req.session.usuario.rol == 'administrador') {
+       console.info('Comprobación satisfactoria');
        next();
-   else{
+   }else{
+       console.info('El usuario '+req.session.usuario.email+' no dispone de privilegios para acceder al recurso');
        res.status(403);
        res.send(swig.renderFile('views/error.html',{error : 'Solo el usuario administrador puede gestionar los usuarios'}));
    }
