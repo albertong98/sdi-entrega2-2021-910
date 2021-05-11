@@ -13,16 +13,16 @@ module.exports = (app,gestorBD) => {
 }
 
 let obtenerOfertas = (res,gestorBD) => {
-    console.info('Usuario '+res.usuario+' accediendo a sus publicaciones');
+    console.info('Usuario '+res.usuario+' accediendo a listado de ofertas');
     gestorBD.obtenerOfertas( {'seller': {$nin: [res.usuario] }} , ofertas => {
         if (ofertas == null) {
             res.status(500);
-            console.error('Error en la base de datos al obtener las publicaciones del usuario '+res.usuario);
+            console.error('Error en la base de datos al obtener las ofertas');
             res.json({
                 error : "se ha producido un error"
             })
         } else {
-            console.info('Publicaciones de '+res.usuario+' obtenidas satisfactoriamente.');
+            console.info('Ofertas obtenidas satisfactoriamente.');
             res.status(200);
             res.json({email: res.usuario,ofertas:ofertas});
         }
