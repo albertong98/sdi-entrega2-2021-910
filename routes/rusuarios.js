@@ -15,18 +15,21 @@ module.exports = (app,swig,gestorBD) => {
 }
 
 let getSignup = (req,res,swig) => {
+    console.info("Usuario entrando a página de registro");
     let respuesta = swig.renderFile('views/bregistro.html',  res.locals);
     req.session.mensajes = [];
     res.send(respuesta);
 }
 
 let getLogin = (req,res,swig) => {
+    console.info("Usuario entrando a página de identificación");
     let respuesta = swig.renderFile('views/bidentificacion.html', res.locals);
     req.session.mensajes = [];
     res.send(respuesta);
 }
 
 let logout = (req,res) => {
+    console.info("Usuario "+req.session.usuario.email+" desconectando");
     req.session.usuario = null;
     res.redirect('/identificarse');
 }
@@ -35,6 +38,8 @@ let postUsuario = (app,req,res,gestorBD,swig) => {
     let seguro = app.get("crypto").createHmac('sha256', app.get('clave'))
         .update(req.body.password).digest('hex');
     let userSignupValidator = require("../validators/userSignupValidator.js");
+
+    console.info("Creando usuario "+req.body.email);
 
     let usuario = {
         email : req.body.email,
@@ -54,13 +59,16 @@ let postUsuario = (app,req,res,gestorBD,swig) => {
             if (usuarios.length == 0) {
                 gestorBD.insertarUsuario(usuario,  id => {
                     if (id == null) {
-                        reject(['Error al registrar el usuario'],'/registrarse',req,res);
+                        console.error("Error en la base de datos al registrar el usuario "+req.body.email);
+                        res.send(swig.renderFile('views/error.html', {error: 'error en la base de datos al registrar el usuario'}));
                     } else {
+                        console.info("Usuario "+req.body.email+" creado satisfactoriamente");
                         req.session.usuario = usuario;
                         res.redirect('/offer/add');
                     }
                 });
             } else {
+                console.warn("Usuario "+req.body.email+" intentando registrarse de nuevo");
                 reject(['El email ya está en uso'],'/registrarse',req,res);
             }
         });
@@ -68,6 +76,7 @@ let postUsuario = (app,req,res,gestorBD,swig) => {
 }
 
 let identificarUsuario = (app,req,res,gestorBD) => {
+    console.info("Usuario intentando conectarse con email "+req.body.email);
     let seguro = app.get("crypto").createHmac('sha256', app.get('clave'))
         .update(req.body.password).digest('hex');
     let loginValidator = require("../validators/loginValidator.js");
@@ -81,9 +90,11 @@ let identificarUsuario = (app,req,res,gestorBD) => {
     else {
         gestorBD.obtenerUsuarios(criterio, usuarios => {
             if (usuarios == null || usuarios.length == 0) {
+                console.warn("Usuario intentando conectarse con credenciales incorrectas");
                 req.session.usuario = null;
                 reject(['Email o password incorrecto'], '/identificarse', req, res)
             } else {
+                console.info("Usuario autenticado como "+req.body.email);
                 req.session.usuario = usuarios[0];
                 res.redirect("/offer/add");
             }
@@ -92,12 +103,14 @@ let identificarUsuario = (app,req,res,gestorBD) => {
 }
 
 let obtenerUsuarios = (req,res,swig,gestorBD) =>{
+    console.info("Usuario identificado como "+req.session.usuario.email+" accediendo a listado de usuarios");
     let criterio = {"email": {$nin:["admin@email.com"]}};
     gestorBD.obtenerUsuarios(criterio, usuarios => {
         if (usuarios == null) {
-            req.session.usuario = null;
-            res.send(swig.renderFile('views/error.html',{error:'error al listar'}));
+            console.error("Error en la base de datos al obtener listado de usuarios");
+            res.send(swig.renderFile('views/error.html',{error:'error al listar usuarios'}));
         } else {
+            console.info("Listado de usuarios recuperado satisfactoriamente");
             res.locals.usuarios = usuarios;
             res.send(swig.renderFile('views/busuarios.html',res.locals));
         }
@@ -105,27 +118,25 @@ let obtenerUsuarios = (req,res,swig,gestorBD) =>{
 }
 
 let deleteUsuarios = (req,res,gestorBD,swig) => {
-    let criterio = {};
-    const { emailUser } = req.body;
-    if(Array.isArray(req.body.emailUser)){
-        emailUser.forEach(email => {
-            criterio = {"email": email};
-            gestorBD.borrarUsuario(criterio, result => {
-                if (result == null)
-                    res.send(swig.renderFile('views/error.html', {error: 'error al eliminar usuario ' + id}));
-            });
-        });
-    }else{
-        criterio = {"email": req.body.emailUser};
-        gestorBD.borrarUsuario(criterio, result => {
-            if (result == null)
-                res.send(swig.renderFile('views/error.html', {error: 'error al eliminar usuario ' + id}));
-        });
-    }
-    res.redirect('/usuario/list');
+    console.info("Usuario identificado como "+req.session.usuario.email+" intentando borrar usuarios");
+    Array.isArray(req.body.emailUser) ? deleteUsersFromBD ({'email' : {$in: req.body.emailUser}},res,gestorBD,swig) :
+                                        deleteUsersFromBD ({'email' : req.body.emailUser},res,gestorBD,swig);
+}
+
+let deleteUsersFromBD = (criterio,res,gestorBD,swig) => {
+    gestorBD.borrarUsuarios(criterio, result => {
+        if (result == null) {
+            console.error("Error el la base de datos al intentar borrar usuarios "+criterio.toString());
+            res.send(swig.renderFile('views/error.html', {error: 'error al eliminar usuarios'}));
+        }else {
+            console.info('Usuarios'+criterio.toString()+' borrados satisfactoriamente');
+            res.redirect('/usuario/list');
+        }
+    });
 }
 
 let reject = (mensajes,destino,req,res) => {
+    console.warn('El servidor no permite la acción');
     mensajes.forEach(m => {
         req.session.mensajes.push({
             mensaje: m,

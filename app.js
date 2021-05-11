@@ -77,8 +77,8 @@ let routerUsuarioAutorToken = express.Router();
 routerUsuarioAutorToken.use((req,res,next) => {
     console.log("routerUsuarioAutor");
     let path = require('path');
-    let id = req.originalUrl.split('/')[3];
-    let email = path.basename(req.originalUrl);
+    let id = req.body.offerId || req.originalUrl.split('/')[3];
+    let email = req.body.comprador || path.basename(req.originalUrl);
 
     if(email == res.usuario)
         next();
@@ -98,6 +98,7 @@ routerUsuarioAutorToken.use((req,res,next) => {
     }
 });
 app.use('/api/conversacion/:id/:email',routerUsuarioAutorToken);
+app.use('/api/conversacion/mensaje',routerUsuarioAutorToken);
 
 //Router para impedir el acceso a usuarios sin registrar el acceso a ciertas direcciones de la página web
 let routerUsuarioSession = express.Router();
