@@ -22,10 +22,15 @@ public class PO_OfferListView extends PO_NavView{
 	}
 	
 	public static void checkOfferDeleted(WebDriver driver, int offerIndex) {
+		//Se obtienen todos los campos td
 		List<WebElement> elementos = PO_View.checkElement(driver, "free","//td");
+		//Recuperamos el campo título de la oferta indicada por el parametro offerIndex
 		String texto = elementos.get(offerIndex*4).getText();
+		//Se obtienen todos los enlaces para eliminar ofertas de la tabla
 		elementos = PO_View.checkElement(driver, "free","//td[contains(text(), '')]/following-sibling::*/a[contains(@href, 'offer/delete')]");
+		//Seleccionamos el enlace indicado por el parametro offerIndex
 		elementos.get(offerIndex).click();
+		//Se comprueba que el titulo obtenido anteriormente ya no se encuentra en la tabla
 		PO_View.checkElementNotInPage(driver, texto);
 	}
 	

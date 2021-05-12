@@ -1,16 +1,23 @@
 module.exports = (app,swig,gestorBD) => {
+	//Petición GET que permite acceder a la página para añadir ofertas
     app.get('/offer/add', (req,res) => getOffer(req,res,swig));
-
+	
+	//Petición POST que permite añadir una oferta a la base de datos
     app.post('/offer/add',(req,res) => postOffer(req,res,gestorBD));
-
+	
+	//Petición GET que permite acceder a la lista de ofertas publicadas por el usuario autenticado
     app.get('/offer/list',(req,res) => getPublicaciones(req,res,swig,gestorBD));
-
+	
+	//Petición GET que permite borrar la oferta indicada por el parametro id
     app.get('/offer/delete/:id',(req,res) => deleteOffer(req,res,swig,gestorBD));
-
+	
+	//Petición GET que permite realizar una busqueda de ofertas subidas por otros usuarios
     app.get('/offer/search',(req,res) => getBusqueda(req,res,gestorBD,swig));
-
+	
+	//Petición GET que permite al usuario autenticado comprar una oferta
     app.get('/offer/buy/:id',(req,res) => buyOffer(req,res,swig,gestorBD));
-
+	
+	//Petición GET que permite acceder a la lista de compras del usuario autenticado
     app.get('/compras',(req,res) => getCompras(req,res,swig,gestorBD));
 }
 

@@ -46,18 +46,19 @@ public class PO_ClientView extends PO_NavView {
 	}
 	
 	public static void enterChat(WebDriver driver,String articulo,String email,String texto,String URL) {
+		//Se inicia sesión
 		login(driver, URL,email,"123456");
-		
+		//Comprobamos que aparece la oferta indicada en el parametro texto
 		PO_View.checkElement(driver, "text", texto);
-		
+		//Entramos a la lista de conversaciones
 		driver.findElement(By.xpath("//a[contains(text(),'Conversaciones')]")).click();
-		
+		//Comprobamos que se carga la página de conversaciones
 		PO_View.checkElement(driver, "text", "Vendedor");
-		
+		//Comprobamos que está cargada la conversacion para el articulo indicado en el parametro articulo
 		PO_View.checkElement(driver, "text",  articulo);
-		
+		//Entramos en la conversacion
 		PO_ConversationView.openChat(driver,  articulo);
-		
+		//Comprobamos que se carga la página de la conversación
 		PO_View.checkElement(driver, "text", "Mensaje");
 	}
 }

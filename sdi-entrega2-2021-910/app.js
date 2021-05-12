@@ -84,15 +84,20 @@ routerUsuarioAutorToken.use((req,res,next) => {
     let email = req.body.comprador || path.basename(req.originalUrl);
 
     console.info('Comprobando que el usuario '+res.usuario+' es participante de la conversacion');
+	//Se comprueba si el usuario es el interesado en la oferta
     if(email == res.usuario) {
+		//En caso de que sea el interesado, se deja correr la petición
         console.info('Comprobación satisfactoria');
         next();
     }else {
+		//En caso contrario, se comprueba si el usuario es el vendedor de la oferta
         gestorBD.obtenerOfertas({_id: mongo.ObjectID(id)}, ofertas => {
             if (ofertas[0].seller == res.usuario) {
+				//Si lo es, dejamos correr la petición
                 console.info('Comprobación satisfactoria');
                 next();
             }else {
+				//Si no lo es, se le impide el acceso
                 console.warn('El usuario '+res.usuario+' no ha podido acceder a la conversación al no ser participante');
                 res.status(403);
                 res.json({
@@ -146,14 +151,17 @@ let routerUsuarioAutor = express.Router();
 routerUsuarioAutor.use(function(req, res, next) {
     let path = require('path');
     let id = path.basename(req.originalUrl);
+	//Se comprueba si el usuario está intentando comprar o borrar una oferta
     let deleting = req.originalUrl.toString().includes('delete');
     console.info('Comprobando si el usuario '+req.session.usuario.email +' es dueño de la oferta '+id);
     gestorBD.obtenerOfertas(
         {_id: mongo.ObjectID(id) }, ofertas => {
+			//Si la petición es para borrar la oferta, comprobamos que el usuario es el dueño, si es para comprar, lo contrario
             if((deleting && ofertas[0].seller == req.session.usuario.email) || ofertas[0].seller != req.session.usuario.email){
                 console.info('Comprobación satisfactoria.');
                 next();
             } else {
+				//El usuario no tiene permitido realizar la petición, se muestra un mensaje en funcion de la petición que sea.
                 console.warn('El usuario '+req.session.usuario.email+' ha realizado una petición no permitida para la oferta '+id);
                 req.session.mensajes.push({
                     mensaje: deleting ? 'Solo puede borrar ofertas propias' : 'No puede comprar sus ofertas',

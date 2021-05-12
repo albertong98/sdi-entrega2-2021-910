@@ -1,16 +1,23 @@
 module.exports = (app,swig,gestorBD) => {
-    app.get('/registrarse',(req,res) => getSignup(req,res,swig));
-
+    //Petición GET que permite acceder a la página de registro
+	app.get('/registrarse',(req,res) => getSignup(req,res,swig));
+	
+	//Petición GET que permite acceder a la página de inicio de sesión
     app.get('/identificarse', (req,res) => getLogin(req,res,swig));
 
+	//Petición GET que permite al usuario registrado desconectarse
     app.get('/desconectarse', (req,res) => logout(req,res));
-
+	
+	//Petición POST que permite añadir un usuario a la base de datos
     app.post('/usuario', (req,res) => postUsuario(app,req,res,gestorBD,swig));
-
+	
+	//Petición POST que permite autenticar a un usuario
     app.post('/identificarse', (req,res) => identificarUsuario(app,req,res,gestorBD));
 
+	//Petición GET que permite al administrador añadir a un usuario
     app.get('/usuario/list', (req,res) => obtenerUsuarios(req,res,swig,gestorBD));
-
+	
+	//Petición POST que permite al administrador borrar a uno o más usuarios
     app.post('/usuario/delete',(req,res) => deleteUsuarios(req,res,gestorBD,swig));
 }
 
@@ -119,6 +126,8 @@ let obtenerUsuarios = (req,res,swig,gestorBD) =>{
 
 let deleteUsuarios = (req,res,gestorBD,swig) => {
     console.info("Usuario identificado como "+req.session.usuario.email+" intentando borrar usuarios");
+	//Comprobamos si el parametro es un array de emails, en caso afirmativo, pasamos como criterio que el email se encuentre en una lista, 
+	//si no, pasamos como criterio que el email sea igual al email indicado en el parametro
     Array.isArray(req.body.emailUser) ? deleteUsersFromBD ({'email' : {$in: req.body.emailUser}},res,gestorBD,swig) :
                                         deleteUsersFromBD ({'email' : req.body.emailUser},res,gestorBD,swig);
 }
@@ -136,6 +145,7 @@ let deleteUsersFromBD = (criterio,res,gestorBD,swig) => {
 }
 
 let reject = (mensajes,destino,req,res) => {
+	//Devolvemos una lista de mensajes de error y redireccionamos al destino indicado, donde se mostrarán al usuario
     console.warn('El servidor no permite la acción');
     mensajes.forEach(m => {
         req.session.mensajes.push({

@@ -1,14 +1,15 @@
 module.exports = (app,gestorBD) => {
+	//Petición GET para mostrar las ofertas de usuarios distintos al autenticado
     app.get('/api/offer',(req,res) => obtenerOfertas(res,gestorBD));
-
+	//Petición POST para autenticar al usuario
     app.post('/api/autenticar/',(req,res) => autenticarUsuario(req,res,gestorBD,app));
-
+	//Petición POST que añade un mensaje a la base de datos
     app.post('/api/conversacion/mensaje',(req,res) => sendMensaje(req,res,gestorBD));
-
+	//Petición GET para recuperar una conversación asignada a una oferta (id) y un interesado (email).
     app.get('/api/conversacion/:id/:email',(req,res) => getConversacion(req,res,gestorBD));
-
+	//Petición GET para recuperar la lista de conversaciones abiertas del usuario autenticado
     app.get('/api/conversaciones', (req,res) => getConversaciones(req,res,gestorBD));
-
+	//Petición DELETE para borrar una conversación asignada a una oferta (id) y un interesado (email).
     app.delete('/api/conversacion/:id/:email',(req,res) => deleteConversacion(req,res,gestorBD));
 }
 
@@ -117,6 +118,7 @@ let getConversaciones = (req,res,gestorBD) => {
             res.status(500);
             res.json({error: "se ha producido un error"});
         }else{
+			//Tomamos como criterio que el id de la oferta esté entre los ids de las ofertas del usuario, o que el email del interesado sea igual al del usuario
             criterio = {$or: [{'offerId': {$in: ofertas.map(o => o._id)}}, {'comprador' : res.usuario}]};
             gestorBD.obtenerConversaciones(criterio,mensajes => {
                 if(mensajes == null) {
@@ -125,10 +127,12 @@ let getConversaciones = (req,res,gestorBD) => {
                     res.json({error: "se ha producido un error"});
                 }else{
                     criterio = {"_id" : {$in: mensajes.map(m => m._id.ofertaId)}}
+					//Obtenemos las ofertas que esten relacionadas a las conversaciones del usuario
                     gestorBD.obtenerOfertas(criterio, offers => {
                         if (offers.length > 0) {
                             mensajes.forEach(m => {
                                 let oferta = offers.find(o => o._id.toString() === m._id.ofertaId.toString());
+								//Creamos un objeto conversacion que incluya los datos de la oferta y lo añadimos a una lista
                                 conversaciones.push({
                                     title: oferta.title,
                                     ofertante: oferta.seller,
